@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Demuxer</title>
+
+    <style type="text/css">
+        body {
+            font: 12px/1.5 Tahoma, Helvetica, Arial, "\5FAE\8F6F\96C5\9ED1", sans-serif;
+        }
+
+        div {
+            outline: none;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+
+    <script type="text/javascript" src="../../dist/demuxer.js"></script>
+
+    <script type="text/javascript">
+        let tsUrl = './hdr420_480_30s.fmp4';
+
+        fetch(tsUrl).then((res) => {
+            res.arrayBuffer().then((bytes) => {
+                let demux = new Demuxer('mp4', {
+                    debug: true
+                });
+    
+                demux.on(Demuxer.Events.DEMUX_DATA, (e) => {
+                    console.log(e)
+                });
+                
+                demux.on(Demuxer.Events.DONE, (e) => {
+                    // consumed & flushed all pipe buffer.
+                });
+                
+                // buffer -> video bytes ArrayBuffer 
+                demux.push(bytes); 
+            });
+        })
+    </script>
+</head>
+
+<body style="background-color: darkslategray;">
+
+</body>
+
+</html>

@@ -1,0 +1,60 @@
+# Documentation: https://graphviz.gitlab.io/documentation/
+# Generate png with: dot -Tpng -O dataflow.gv
+
+
+digraph demux {
+    label = <<u>Demux Data Flow Diagram</u> <br/>>
+    labelloc = t
+
+    graph [fontname = "helvetica"];
+    node [fontname = "helvetica", shape = rectangle]
+    edge [fontname = "helvetica", fontsize = 10]
+
+    DEMUX [label = "DEMUX" shape = cylinder]
+    MP4_DEMUX [shape = rectangle]
+    TS_DEMUX [shape = rectangle]
+
+    PesStream   [shape = component]
+    ElementaryStream  [shape = component]
+    ComplexStream  [shape = component]
+    Mp4Inspector  [shape = trapezium]
+
+    ####################################################################################################
+    DEMUX -> MP4_DEMUX [label = "ArrayBuffer => JSON" dir = both arrowtail = onormal]
+    DEMUX -> TS_DEMUX [label = "ArrayBuffer"]
+
+    MP4_DEMUX -> Mp4Inspector [label = "ArrayBuffer => JSON" dir = both arrowtail = onormal]
+
+    TS_DEMUX -> PesStream [label = "packet_data"]
+    PesStream -> ElementaryStream [label = "elementary_data"]
+    ElementaryStream -> ComplexStream [label = "complex_data"]
+
+
+
+    subgraph cluster_legend {
+        style = rounded
+        color = "#444444"
+        label = <<u>Legend</u>>
+        fontsize = 12
+        fontcolor = "#444444"
+
+        node [shape = plaintext color = "#444444" fontsize = 10 fontcolor = "#444444"]
+        edge [color = "#444444" fontcolor = "#444444"]
+
+        blank1 [label = "" fixedsize = true height = 0]
+        blank2 [label = "" fixedsize = true height = 0]
+        blank3 [label = "" fixedsize = true height = 0]
+        blank4 [label = "" fixedsize = true height = 0]
+
+        "data pushed and emit value" -> blank2 [dir = both arrowtail = onormal label = "ArgType => ReturnType"]
+        "data pushed one way" -> blank1 [label = "DataType"]
+
+        "plugin" [shape = trapezium]
+        "pipeline stream" [shape = component]
+        "internal class" [shape = rectangle]
+        "main module" [shape = cylinder]
+    }
+
+    # Hack to move the legend beneath the main graph:
+    ComplexStream -> "data pushed one way" [style = invisible arrowhead = none]
+}

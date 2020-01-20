@@ -1,0 +1,3 @@
+# rules follow https://eslint.org/docs/user-guide/configuring#ignoring-files-and-directories
+
+dist/

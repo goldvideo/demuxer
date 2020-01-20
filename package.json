@@ -1,0 +1,70 @@
+{
+  "name": "demuxer",
+  "version": "1.0.1",
+  "description": "A utility for transmux ts/mp4",
+  "main": "src/index.js",
+  "directories": {
+    "doc": "doc",
+    "test": "test"
+  },
+  "scripts": {
+    "dev": "webpack --config __compile/webpack.dev.conf.js --watch",
+    "production": "webpack --config __compile/webpack.prod.conf.js",
+    "test": "karma start",
+    "doc": "jsdoc ./src/ -c doc/jsdoc.json",
+    "esm": "rollup -c"
+  },
+  "author": "gems.xu@gmail.com",
+  "license": "MIT",
+  "devDependencies": {
+    "@babel/cli": "^7.4.4",
+    "@babel/core": "^7.4.5",
+    "@babel/plugin-transform-runtime": "^7.6.2",
+    "@babel/preset-env": "^7.4.5",
+    "@commitlint/cli": "^7.4.0",
+    "@commitlint/config-conventional": "^7.3.1",
+    "babel-eslint": "^10.0.2",
+    "babel-loader": "^8.0.4",
+    "clean-webpack-plugin": "^0.1.18",
+    "commitizen": "^3.0.5",
+    "core-js": "^3.2.1",
+    "eslint": "^6.1.0",
+    "filewatcher": "^3.0.1",
+    "git-cz": "^3.2.1",
+    "husky": "^1.3.1",
+    "jasmine-core": "^3.4.0",
+    "jsdoc": "^3.5.5",
+    "karma": "^3.1.4",
+    "karma-chrome-launcher": "^3.0.0",
+    "karma-firefox-launcher": "^1.1.0",
+    "karma-jasmine": "^2.0.1",
+    "karma-safari-launcher": "^1.0.0",
+    "karma-webpack": "^4.0.2",
+    "lint-staged": "^8.1.4",
+    "rollup": "^1.27.8",
+    "webpack": "4.26.0",
+    "webpack-cli": "^3.1.2",
+    "webpack-merge": "^4.1.2",
+    "webworkify-webpack": "^2.1.3"
+  },
+  "config": {
+    "commitizen": {
+      "path": "git-cz"
+    }
+  },
+  "dependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/goldvideo/demuxer.git"
+  },
+  "keywords": [
+    "demux",
+    "mpegts",
+    "ts",
+    "mp4"
+  ],
+  "bugs": {
+    "url": "https://github.com/goldvideo/demuxer/issues"
+  },
+  "homepage": "https://github.com/goldvideo/demuxer#readme"
+}
