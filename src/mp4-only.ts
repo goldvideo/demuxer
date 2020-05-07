@@ -6,6 +6,4 @@
  */
 
 export { Events } from './enum/events';
-export { TSDemux } from './m2t/demux';
 export { MP4Demux } from './mp4/demux';
-// export { FLVDemux } from './flv/demux';

@@ -7,10 +7,10 @@
 /* eslint-disable */
 let /**
 	 * Returns the string representation of an ASCII encoded four byte buffer.
-	 * @param buffer {Uint8Array} a four-byte buffer to translate
-	 * @return {string} the corresponding string
+	 * @param buffer - a four-byte buffer to translate
+	 * @return the corresponding string
 	 */
-	parseType = function(buffer) {
+	parseType = function (buffer: Uint8Array): string {
 		let result = '';
 		result += String.fromCharCode(buffer[0]);
 		result += String.fromCharCode(buffer[1]);
@@ -18,10 +18,10 @@ let /**
 		result += String.fromCharCode(buffer[3]);
 		return result;
 	},
-	parseMp4Date = function(seconds) {
+	parseMp4Date = function (seconds: number): Date {
 		return new Date(seconds * 1000 - 2082844800000);
 	},
-	parseSampleFlags = function(flags) {
+	parseSampleFlags = function (flags: Uint8Array) {
 		return {
 			isLeading: (flags[0] & 0x0c) >>> 2,
 			dependsOn: flags[0] & 0x03,
@@ -32,7 +32,7 @@ let /**
 			degradationPriority: (flags[2] << 8) | flags[3]
 		};
 	},
-	nalParse = function(avcStream) {
+	nalParse = function (avcStream) {
 		let avcView = new DataView(avcStream.buffer, avcStream.byteOffset, avcStream.byteLength),
 			result = [],
 			i,
@@ -71,7 +71,7 @@ let /**
 		// codingname, not a first-class box type. stsd entries share the
 		// same format as real boxes so the parsing infrastructure can be
 		// shared
-		avc1: function(data) {
+		avc1: function (data) {
 			let view = new DataView(data.buffer, data.byteOffset, data.byteLength);
 			return {
 				dataReferenceIndex: view.getUint16(6),
@@ -84,7 +84,7 @@ let /**
 				config: mp4toJSON(data.subarray(78, data.byteLength))
 			};
 		},
-		avcC: function(data) {
+		avcC: function (data) {
 			let view = new DataView(data.buffer, data.byteOffset, data.byteLength),
 				result = {
 					configurationVersion: data[0],
@@ -120,7 +120,7 @@ let /**
 			}
 			return result;
 		},
-		btrt: function(data) {
+		btrt: function (data) {
 			let view = new DataView(data.buffer, data.byteOffset, data.byteLength);
 			return {
 				bufferSizeDB: view.getUint32(0),
@@ -128,7 +128,7 @@ let /**
 				avgBitrate: view.getUint32(8)
 			};
 		},
-		esds: function(data) {
+		esds: function (data) {
 			let view = new DataView(data.buffer, data.byteOffset, data.byteLength);
 			return {
 				version: data[0],
@@ -156,7 +156,7 @@ let /**
 				}
 			};
 		},
-		ftyp: function(data) {
+		ftyp: function (data) {
 			let view = new DataView(data.buffer, data.byteOffset, data.byteLength),
 				result = {
 					majorBrand: parseType(data.subarray(0, 4)),
@@ -170,19 +170,19 @@ let /**
 			}
 			return result;
 		},
-		dinf: function(data) {
+		dinf: function (data) {
 			return {
 				boxes: mp4toJSON(data)
 			};
 		},
-		dref: function(data) {
+		dref: function (data) {
 			return {
 				version: data[0],
 				flags: new Uint8Array(data.subarray(1, 4)),
 				dataReferences: mp4toJSON(data.subarray(8))
 			};
 		},
-		hdlr: function(data) {
+		hdlr: function (data) {
 			let view = new DataView(data.buffer, data.byteOffset, data.byteLength),
 				result = {
 					version: view.getUint8(0),
@@ -214,14 +214,18 @@ let /**
 		// 		realData: data
 		// 	};
 		// },
-		mdhd: function(data) {
+		mdhd: function (data) {
 			let view = new DataView(data.buffer, data.byteOffset, data.byteLength),
 				i = 4,
 				language,
 				result = {
 					version: view.getUint8(0),
 					flags: new Uint8Array(data.subarray(1, 4)),
-					language: ''
+					language: '',
+					creationTime: new Date(),
+					modificationTime: new Date(),
+					timescale: 0,
+					duration: 0
 				};
 			if (result.version === 1) {
 				i += 4;
@@ -251,19 +255,19 @@ let /**
 
 			return result;
 		},
-		mdia: function(data) {
+		mdia: function (data) {
 			return {
 				boxes: mp4toJSON(data)
 			};
 		},
-		mfhd: function(data) {
+		mfhd: function (data) {
 			return {
 				version: data[0],
 				flags: new Uint8Array(data.subarray(1, 4)),
 				sequenceNumber: (data[4] << 24) | (data[5] << 16) | (data[6] << 8) | data[7]
 			};
 		},
-		minf: function(data) {
+		minf: function (data) {
 			return {
 				boxes: mp4toJSON(data)
 			};
@@ -271,7 +275,7 @@ let /**
 		// codingname, not a first-class box type. stsd entries share the
 		// same format as real boxes so the parsing infrastructure can be
 		// shared
-		mp4a: function(data) {
+		mp4a: function (data) {
 			let view = new DataView(data.buffer, data.byteOffset, data.byteLength),
 				result = {
 					// 6 bytes reserved
@@ -281,7 +285,8 @@ let /**
 					samplesize: view.getUint16(18),
 					// 2 bytes pre_defined
 					// 2 bytes reserved
-					samplerate: view.getUint16(24) + view.getUint16(26) / 65536
+					samplerate: view.getUint16(24) + view.getUint16(26) / 65536,
+					streamDescriptor: undefined
 				};
 
 			// if there are more bytes to process, assume this is an ISO/IEC
@@ -291,27 +296,35 @@ let /**
 			}
 			return result;
 		},
-		moof: function(data) {
+		moof: function (data) {
 			return {
 				boxes: mp4toJSON(data)
 			};
 		},
-		moov: function(data) {
+		moov: function (data) {
 			return {
 				boxes: mp4toJSON(data)
 			};
 		},
-		mvex: function(data) {
+		mvex: function (data) {
 			return {
 				boxes: mp4toJSON(data)
 			};
 		},
-		mvhd: function(data) {
+		mvhd: function (data) {
 			let view = new DataView(data.buffer, data.byteOffset, data.byteLength),
 				i = 4,
 				result = {
 					version: view.getUint8(0),
-					flags: new Uint8Array(data.subarray(1, 4))
+					flags: new Uint8Array(data.subarray(1, 4)),
+					creationTime: new Date(),
+					modificationTime: new Date(),
+					timescale: 0,
+					duration: 0,
+					rate: 0,
+					volume: 0,
+					matrix: new Uint32Array(0),
+					nextTrackId: 0
 				};
 
 			if (result.version === 1) {
@@ -347,7 +360,7 @@ let /**
 			result.nextTrackId = view.getUint32(i);
 			return result;
 		},
-		pdin: function(data) {
+		pdin: function (data) {
 			let view = new DataView(data.buffer, data.byteOffset, data.byteLength);
 			return {
 				version: view.getUint8(0),
@@ -356,7 +369,7 @@ let /**
 				initialDelay: view.getUint32(8)
 			};
 		},
-		sdtp: function(data) {
+		sdtp: function (data) {
 			let result = {
 					version: data[0],
 					flags: new Uint8Array(data.subarray(1, 4)),
@@ -373,7 +386,7 @@ let /**
 			}
 			return result;
 		},
-		sidx: function(data) {
+		sidx: function (data) {
 			let view = new DataView(data.buffer, data.byteOffset, data.byteLength),
 				result = {
 					version: data[0],
@@ -400,12 +413,12 @@ let /**
 
 			return result;
 		},
-		stbl: function(data) {
+		stbl: function (data) {
 			return {
 				boxes: mp4toJSON(data)
 			};
 		},
-		stco: function(data) {
+		stco: function (data) {
 			let view = new DataView(data.buffer, data.byteOffset, data.byteLength);
 			let entryCount = view.getUint32(4);
 			let result = {
@@ -419,7 +432,7 @@ let /**
 			}
 			return result;
 		},
-		stsc: function(data) {
+		stsc: function (data) {
 			let view = new DataView(data.buffer, data.byteOffset, data.byteLength),
 				entryCount = view.getUint32(4),
 				result = {
@@ -437,14 +450,14 @@ let /**
 			}
 			return result;
 		},
-		stsd: function(data) {
+		stsd: function (data) {
 			return {
 				version: data[0],
 				flags: new Uint8Array(data.subarray(1, 4)),
 				boxes: mp4toJSON(data.subarray(8))
 			};
 		},
-		stsz: function(data) {
+		stsz: function (data) {
 			let view = new DataView(data.buffer, data.byteOffset, data.byteLength),
 				result = {
 					version: data[0],
@@ -458,7 +471,7 @@ let /**
 			}
 			return result;
 		},
-		stts: function(data) {
+		stts: function (data) {
 			let view = new DataView(data.buffer, data.byteOffset, data.byteLength),
 				result = {
 					version: data[0],
@@ -476,19 +489,28 @@ let /**
 			}
 			return result;
 		},
-		styp: function(data) {
+		styp: function (data) {
 			return parse.ftyp(data);
 		},
-		tfdt: function(data) {
+		tfdt: function (data) {
 			return {
 				version: data[0],
 				flags: new Uint8Array(data.subarray(1, 4)),
 				baseMediaDecodeTime: (data[4] << 24) | (data[5] << 16) | (data[6] << 8) | data[7]
 			};
 		},
-		tfhd: function(data) {
+		tfhd: function (data) {
 			let view = new DataView(data.buffer, data.byteOffset, data.byteLength),
-				result = {
+				result: {
+					version: number;
+					flags: Uint8Array;
+					trackId: number;
+					baseDataOffset?: number;
+					sampleDescriptionIndex?: number;
+					defaultSampleDuration?: number;
+					defaultSampleSize?: number;
+					defaultSampleFlags?: number;
+				} = {
 					version: data[0],
 					flags: new Uint8Array(data.subarray(1, 4)),
 					trackId: view.getUint32(4)
@@ -523,12 +545,22 @@ let /**
 			}
 			return result;
 		},
-		tkhd: function(data) {
+		tkhd: function (data) {
 			let view = new DataView(data.buffer, data.byteOffset, data.byteLength),
 				i = 4,
 				result = {
 					version: view.getUint8(0),
-					flags: new Uint8Array(data.subarray(1, 4))
+					flags: new Uint8Array(data.subarray(1, 4)),
+					creationTime: new Date(),
+					modificationTime: new Date(),
+					trackId: 0,
+					duration: 0,
+					layer: 0,
+					alternateGroup: 0,
+					volume: 0,
+					width: 0,
+					height: 0,
+					matrix: new Uint32Array(0)
 				};
 			if (result.version === 1) {
 				i += 4;
@@ -567,17 +599,17 @@ let /**
 			result.height = view.getUint16(i) + view.getUint16(i + 2) / 16;
 			return result;
 		},
-		traf: function(data) {
+		traf: function (data) {
 			return {
 				boxes: mp4toJSON(data)
 			};
 		},
-		trak: function(data) {
+		trak: function (data) {
 			return {
 				boxes: mp4toJSON(data)
 			};
 		},
-		trex: function(data) {
+		trex: function (data) {
 			let view = new DataView(data.buffer, data.byteOffset, data.byteLength);
 			return {
 				version: data[0],
@@ -594,8 +626,13 @@ let /**
 				sampleDegradationPriority: view.getUint16(22)
 			};
 		},
-		trun: function(data) {
-			let result = {
+		trun: function (data) {
+			let result: {
+					version: number;
+					flags: Uint8Array;
+					samples: Array<any>;
+					dataOffset?: number;
+				} = {
 					version: data[0],
 					flags: new Uint8Array(data.subarray(1, 4)),
 					samples: []
@@ -657,13 +694,13 @@ let /**
 			}
 			return result;
 		},
-		'url ': function(data) {
+		'url ': function (data) {
 			return {
 				version: data[0],
 				flags: new Uint8Array(data.subarray(1, 4))
 			};
 		},
-		vmhd: function(data) {
+		vmhd: function (data) {
 			//let view = new DataView(data.buffer, data.byteOffset, data.byteLength);
 			return {
 				version: data[0],
@@ -677,12 +714,11 @@ let /**
 	};
 
 /**
- * Return a javascript array of box objects parsed from an ISO base
- * media file.
- * @param data {Uint8Array} the binary data of the media to be inspected
- * @return {array} a javascript array of potentially nested box objects
+ * Return a javascript array of box objects parsed from an ISO base media file.
+ * @param data - the binary data of the media to be inspected
+ * @return a javascript array of potentially nested box objects
  */
-let mp4toJSON = function(data) {
+let mp4toJSON = function (data: Uint8Array): Array<any> {
 	let i = 0,
 		result = [],
 		view = new DataView(data.buffer, data.byteOffset, data.byteLength),
@@ -699,7 +735,7 @@ let mp4toJSON = function(data) {
 		// parse type-specific data
 		box = (
 			parse[type] ||
-			function(data) {
+			function (data) {
 				return {
 					data: data
 				};
@@ -715,8 +751,6 @@ let mp4toJSON = function(data) {
 	return result;
 };
 
-let MP4Inspect = {
+export const MP4Inspect = {
 	mp4toJSON: mp4toJSON
 };
-
-export default MP4Inspect;

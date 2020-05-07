@@ -4,8 +4,7 @@
  * @author gem <gems.xu@gmail.com>
  */
 import { Events } from './enum/events';
-import IDemux from './IDemux';
-import { PushConf } from './types/globals';
+import { IDemux, PushConf } from './types/globals';
 import EventManager from './util/event-manager';
 import { isArrayBuffer, isUint8Array } from './util/is';
 import Stream from './util/stream';
