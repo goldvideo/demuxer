@@ -1,0 +1,34 @@
+{
+    "compilerOptions": {
+        "baseUrl": ".",
+        "outDir": "dist",
+        "module": "ESNext",
+        "target": "ESNext",
+        "noLib": false,
+        "lib": [
+            // "es5",
+            // "es2015",
+            // "es2015.promise",
+            "DOM",
+            "webworker"
+        ],
+        "noImplicitAny": false,
+        "noErrorTruncation": true,
+        "allowJs": true,
+        "sourceMap": true,
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "listFiles": true,
+        "paths": {}
+    },
+    "exclude": [
+        "dist/",
+        "node_modules/"
+    ],
+    "include": [
+        "src/**/*"
+    ],
+    "types": [
+        "node"
+    ]
+}
