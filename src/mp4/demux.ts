@@ -5,6 +5,7 @@
  */
 
 import AbstractDemux from '../abstract-demux';
+import { GlobalOptions } from '../types/globals';
 import logger from '../util/logger';
 import { MP4Inspect } from './mp4-inspector';
 
@@ -12,8 +13,8 @@ import { MP4Inspect } from './mp4-inspector';
  * mp4.
  */
 export class MP4Demux extends AbstractDemux {
-	constructor() {
-		super();
+	constructor(options: GlobalOptions = {}) {
+		super(options);
 
 		super.listenEndStream();
 	}

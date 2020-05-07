@@ -23,19 +23,15 @@ const CHUNK_BYTE_LENGTH = 188; // Transport Stream chunks shall be 188 bytes lon
 type InterfaceStream = M2TSComplexStream | ElementaryStream;
 
 export class TSDemux extends AbstractDemux {
-	private options_: GlobalOptions;
 	private cache_buffer_: CacheBuffer;
 	private psi_: PSI;
 	private pesStream_: PesStream;
 	private elementaryStream_: ElementaryStream;
 	private complexStream_: M2TSComplexStream;
-	private context_: Context;
 
 	constructor(options: GlobalOptions = {}) {
-		super();
+		super(options);
 
-		this.context_ = new Context();
-		this.options_ = options;
 		this.cache_buffer_ = new CacheBuffer();
 		this.psi_ = new PSI(this.context_);
 		this.pesStream_ = new PesStream(this.context_, this.psi_);

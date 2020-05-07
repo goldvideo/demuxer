@@ -4,7 +4,7 @@
  * @author gem <gems.xu@gmail.com>
  */
 import { Events } from './enum/events';
-import { IDemux, PushConf } from './types/globals';
+import { Context, GlobalOptions, IDemux, PushConf } from './types/globals';
 import EventManager from './util/event-manager';
 import { isArrayBuffer, isUint8Array } from './util/is';
 import Stream from './util/stream';
@@ -29,7 +29,9 @@ export default abstract class AbstractDemux extends Stream implements IDemux {
 	// }
 
 	readonly endStream?: Stream;
-	private eventManager_: EventManager;
+	protected eventManager_: EventManager;
+	protected context_: Context;
+	protected options_: GlobalOptions;
 
 	protected listenEndStream(): void {
 		this.eventManager_ = new EventManager();
@@ -41,6 +43,13 @@ export default abstract class AbstractDemux extends Stream implements IDemux {
 			.on(this.endStream, 'done', (data) => {
 				this.emit(Events.DONE, data);
 			});
+	}
+
+	constructor(options: GlobalOptions = {}) {
+		super();
+
+		this.context_ = new Context();
+		this.options_ = options;
 	}
 
 	/**

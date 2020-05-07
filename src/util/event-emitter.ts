@@ -40,6 +40,12 @@ export default class EventEmitter {
 		}
 	}
 
+	static defaultMaxListeners: number;
+
+	_maxListeners?: number;
+	_eventsCount: number;
+	_events: any;
+
 	constructor() {
 		if (!this._events || !Object.prototype.hasOwnProperty.call(this, '_events')) {
 			this._events = objectCreate(null);
@@ -62,7 +68,7 @@ export default class EventEmitter {
 	//     return $getMaxListeners(this);
 	// }
 
-	emit(type) {
+	emit(type: string, ...rest) {
 		var er, handler, len, args, i, events;
 		var doError = type === 'error';
 
@@ -78,7 +84,7 @@ export default class EventEmitter {
 			} else {
 				// At least give some kind of context to the user
 				var err = new Error('Unhandled "error" event. (' + er + ')');
-				err.context = er;
+				err['context'] = er;
 				throw err;
 			}
 		}
@@ -113,8 +119,8 @@ export default class EventEmitter {
 		return true;
 	}
 
-	on(type, listener) {
-		return _addListener(this, type, listener, false);
+	on(type: string, listener: Function) {
+		return _addListener(this, type, listener);
 	}
 
 	once(type, listener) {
@@ -190,18 +196,18 @@ export default class EventEmitter {
 let hasDefineProperty;
 try {
 	var o = {};
-	if (Object.defineProperty) Object.defineProperty(o, 'x', {value: 0});
-	hasDefineProperty = o.x === 0;
+	if (Object.defineProperty) Object.defineProperty(o, 'x', { value: 0 });
+	hasDefineProperty = o['x'] === 0;
 } catch (err) {
 	hasDefineProperty = false;
 }
 if (hasDefineProperty) {
 	Object.defineProperty(EventEmitter, 'defaultMaxListeners', {
 		enumerable: true,
-		get: function() {
+		get: function () {
 			return defaultMaxListeners;
 		},
-		set: function(arg) {
+		set: function (arg) {
 			// check whether the input is a positive number (whose value is zero or
 			// greater and not a NaN).
 			if (typeof arg !== 'number' || arg < 0 || arg !== arg)
@@ -298,7 +304,7 @@ function emitMany(handler, isFn, self, args) {
 	}
 }
 
-function _addListener(target, type, listener) {
+function _addListener(target: EventEmitter, type, listener: Function) {
 	var m;
 	var events;
 	var existing;
@@ -313,7 +319,7 @@ function _addListener(target, type, listener) {
 		// To avoid recursion in the case that type === "newListener"! Before
 		// adding it to the listeners, first emit "newListener".
 		if (events.newListener) {
-			target.emit('newListener', type, listener.listener ? listener.listener : listener);
+			target.emit('newListener', type, listener['listener'] ? listener['listener'] : listener);
 
 			// Re-assign `events` because a newListener handler could have caused the
 			// this._events to be assigned to a new object
@@ -339,7 +345,13 @@ function _addListener(target, type, listener) {
 			m = $getMaxListeners(target);
 			if (m && m > 0 && existing.length > m) {
 				existing.warned = true;
-				var w = new Error(
+
+				class CustomError extends Error {
+					emitter: any;
+					type: string;
+					count: number;
+				}
+				let w: CustomError = new CustomError(
 					'Possible Dispatcher memory leak detected. ' +
 						existing.length +
 						' "' +
@@ -352,6 +364,7 @@ function _addListener(target, type, listener) {
 				w.emitter = target;
 				w.type = type;
 				w.count = existing.length;
+
 				if (typeof console === 'object' && console.warn) {
 					console.warn('%s: %s', w.name, w.message);
 				}
@@ -425,7 +438,7 @@ function onceWrapper() {
 }
 
 function _onceWrap(target, type, listener) {
-	var state = {fired: false, wrapFn: undefined, target: target, type: type, listener: listener};
+	var state = { fired: false, wrapFn: undefined, target: target, type: type, listener: listener };
 	var wrapped = bind.call(onceWrapper, state);
 	wrapped.listener = listener;
 	state.wrapFn = wrapped;
@@ -482,7 +495,7 @@ function unwrapListeners(arr) {
 }
 
 function objectCreatePolyfill(proto) {
-	var F = function() {};
+	var F = function () {};
 	F.prototype = proto;
 	return new F();
 }
@@ -498,7 +511,7 @@ function objectKeysPolyfill(obj) {
 
 function functionBindPolyfill(context) {
 	var fn = this;
-	return function() {
+	return function () {
 		return fn.apply(context, arguments);
 	};
 }
