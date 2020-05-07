@@ -9,43 +9,46 @@ const getPlugins = function () {
 	];
 };
 
-export default [
+let configs = [];
+let formatMaps = [
 	{
-		input: './src/index.ts',
-		output: [
-			{
-				file: 'dist/demuxer.umd.js',
-				format: 'umd',
-				name: 'Demuxer'
-			},
-			{
-				file: 'dist/demuxer.esm.js',
-				format: 'esm'
-			},
-			{
-				file: 'dist/demuxer.cjs.js',
-				format: 'cjs'
-			}
-		],
-		plugins: getPlugins()
+		entry: 'index',
+		outputName: 'all'
 	},
 	{
-		input: './src/ts-only.ts',
+		entry: 'ts-only',
+		outputName: 'ts'
+	},
+	{
+		entry: 'mp4-only',
+		outputName: 'mp4'
+	}
+	// {
+	// 	entry: 'ts-only',
+	// 	outputName: 'ts'
+	// }
+];
+
+formatMaps.forEach((item, index) => {
+	configs.push({
+		input: [`./src/${item.entry}.ts`],
 		output: [
 			{
-				file: 'dist/demuxer.ts.umd.js',
+				file: `dist/demuxer.${item.outputName}.umd.js`,
 				format: 'umd',
 				name: 'Demuxer'
 			},
 			{
-				file: 'dist/demuxer.ts.esm.js',
+				file: `dist/demuxer.${item.outputName}.esm.js`,
 				format: 'esm'
 			},
 			{
-				file: 'dist/demuxer.ts.cjs.js',
+				file: `dist/demuxer.${item.outputName}.cjs.js`,
 				format: 'cjs'
 			}
 		],
 		plugins: getPlugins()
-	}
-];
+	});
+});
+
+export default configs;

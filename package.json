@@ -1,35 +1,28 @@
 {
   "name": "demuxer",
-  "version": "1.0.1",
-  "description": "A utility for transmux ts/mp4",
-  "main": "src/index.js",
+  "version": "2.0.0",
+  "description": "A utility for transmux ts/mp4/flv",
+  "main": "dist/demuxer.cjs.js",
   "directories": {
     "doc": "doc",
     "test": "test"
   },
   "scripts": {
-    "dev": "webpack --config __compile/webpack.dev.conf.js --watch",
-    "production": "webpack --config __compile/webpack.prod.conf.js",
+    "dev": "rollup -wcm ./rollup.config.js",
+    "production": "rollup -c ./rollup.config.js",
     "test": "karma start",
-    "doc": "jsdoc ./src/ -c doc/jsdoc.json",
-    "esm": "rollup -c"
+    "doc": "jsdoc ./src/ -c doc/jsdoc.json"
   },
   "author": "gems.xu@gmail.com",
   "license": "MIT",
   "devDependencies": {
-    "@babel/cli": "^7.4.4",
-    "@babel/core": "^7.4.5",
-    "@babel/plugin-transform-runtime": "^7.6.2",
-    "@babel/preset-env": "^7.4.5",
     "@commitlint/cli": "^7.4.0",
     "@commitlint/config-conventional": "^7.3.1",
-    "babel-eslint": "^10.0.2",
-    "babel-loader": "^8.0.4",
-    "clean-webpack-plugin": "^0.1.18",
+    "@types/node": "^13.13.4",
+    "@typescript-eslint/eslint-plugin": "^2.30.0",
+    "@typescript-eslint/parser": "^2.30.0",
     "commitizen": "^3.0.5",
-    "core-js": "^3.2.1",
     "eslint": "^6.1.0",
-    "filewatcher": "^3.0.1",
     "git-cz": "^3.2.1",
     "husky": "^1.3.1",
     "jasmine-core": "^3.4.0",
@@ -41,11 +34,10 @@
     "karma-safari-launcher": "^1.0.0",
     "karma-webpack": "^4.0.2",
     "lint-staged": "^8.1.4",
-    "rollup": "^1.27.8",
-    "webpack": "4.26.0",
-    "webpack-cli": "^3.1.2",
-    "webpack-merge": "^4.1.2",
-    "webworkify-webpack": "^2.1.3"
+    "prettier": "2.0.5",
+    "rollup": "^2.8.2",
+    "rollup-plugin-typescript2": "^0.27.0",
+    "typescript": "^3.8.3"
   },
   "config": {
     "commitizen": {
@@ -59,9 +51,11 @@
   },
   "keywords": [
     "demux",
+    "typescript",
     "mpegts",
     "ts",
-    "mp4"
+    "mp4",
+    "flv"
   ],
   "bugs": {
     "url": "https://github.com/goldvideo/demuxer/issues"
