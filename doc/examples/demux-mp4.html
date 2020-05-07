@@ -21,27 +21,27 @@
         }
     </style>
 
-    <script type="text/javascript" src="../../dist/demuxer.js"></script>
+    <script type="text/javascript" src="../../dist/demuxer.mp4.umd.js"></script>
 
     <script type="text/javascript">
         let tsUrl = './hdr420_480_30s.fmp4';
 
         fetch(tsUrl).then((res) => {
             res.arrayBuffer().then((bytes) => {
-                let demux = new Demuxer('mp4', {
+                let demux = new Demuxer.MP4Demux('mp4', {
                     debug: true
                 });
-    
+
                 demux.on(Demuxer.Events.DEMUX_DATA, (e) => {
                     console.log(e)
                 });
-                
+
                 demux.on(Demuxer.Events.DONE, (e) => {
                     // consumed & flushed all pipe buffer.
                 });
-                
+
                 // buffer -> video bytes ArrayBuffer 
-                demux.push(bytes); 
+                demux.push(bytes);
             });
         })
     </script>

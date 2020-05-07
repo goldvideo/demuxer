@@ -21,33 +21,33 @@
         }
     </style>
 
-    <script type="text/javascript" src="../../dist/demuxer.js"></script>
+    <script type="text/javascript" src="../../dist/demuxer.ts.umd.js"></script>
 
     <script type="text/javascript">
         let tsUrl = './h265_aac_1_16000.ts';
 
         fetch(tsUrl).then((res) => {
             res.arrayBuffer().then((bytes) => {
-                let demux = new Demuxer('m2ts', {
+                let demux = new Demuxer.TSDemux({
                     debug: true
                 });
-    
+
                 demux.on(Demuxer.Events.DEMUX_DATA, (e) => {
                     console.log(e)
-                    
+
                     // if (e.stream_type === 15) {
                     //     console.log(e)
                     // }
                 });
-                
+
                 demux.on(Demuxer.Events.DONE, (e) => {
                     // consumed & flushed all pipe buffer.
                 });
-                
+
                 // buffer -> video bytes ArrayBuffer 
                 demux.push(bytes, {
                     done: true
-                }); 
+                });
             });
         })
     </script>
