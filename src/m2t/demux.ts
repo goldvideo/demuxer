@@ -7,9 +7,9 @@
 /**
  * MPEG-2 transport stream demuxer.
  */
-import AbstractDemux from '../abstract-demux';
+import DemuxFacade from '../demux-facade';
 import muxErrorCode from '../mux-error-code';
-import { Context, GlobalOptions, PushConf } from '../types/globals';
+import { GlobalOptions, PushConf } from '../types/globals';
 import CacheBuffer from '../util/cache-buffer';
 import logger from '../util/logger';
 import PSI from './psi';
@@ -22,7 +22,7 @@ const CHUNK_BYTE_LENGTH = 188; // Transport Stream chunks shall be 188 bytes lon
 
 type InterfaceStream = M2TSComplexStream | ElementaryStream;
 
-export class TSDemux extends AbstractDemux {
+export class TSDemux extends DemuxFacade {
 	private cache_buffer_: CacheBuffer;
 	private psi_: PSI;
 	private pesStream_: PesStream;

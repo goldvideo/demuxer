@@ -9,7 +9,7 @@ import EventManager from './util/event-manager';
 import { isArrayBuffer, isUint8Array } from './util/is';
 import Stream from './util/stream';
 
-export default abstract class AbstractDemux extends Stream implements IDemux {
+export default abstract class DemuxFacade extends Stream implements IDemux {
 	// /**
 	//  * Mux Constructor
 	//  * @param {String} from - the source to demux

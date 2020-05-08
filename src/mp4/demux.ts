@@ -4,7 +4,7 @@
  * @author gem <gems.xu@gmail.com>
  */
 
-import AbstractDemux from '../abstract-demux';
+import DemuxFacade from '../demux-facade';
 import { GlobalOptions } from '../types/globals';
 import logger from '../util/logger';
 import { MP4Inspect } from './mp4-inspector';
@@ -12,7 +12,7 @@ import { MP4Inspect } from './mp4-inspector';
 /**
  * mp4.
  */
-export class MP4Demux extends AbstractDemux {
+export class MP4Demux extends DemuxFacade {
 	constructor(options: GlobalOptions = {}) {
 		super(options);
 
