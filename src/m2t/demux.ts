@@ -43,7 +43,7 @@ export class TSDemux extends DemuxFacade {
 		this.pesStream_.pipe(this.elementaryStream_);
 		this.elementaryStream_.pipe(this.complexStream_);
 
-		super.listenEndStream();
+		super.listenEndStream_();
 	}
 
 	/**

@@ -26,7 +26,7 @@ class Logger extends EventEmitter {
 		return this._enable;
 	}
 
-	set enable(value) {
+	set enable(value: boolean) {
 		this._enable = value;
 
 		this.MSG_NAME = '__log__';

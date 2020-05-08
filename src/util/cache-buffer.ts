@@ -4,6 +4,8 @@
  * @author gem <gems.xu@gmail.com>
  */
 
+import { isNumber } from './is';
+
 /**
  * Cache Buffer util.
  * It's applicable for streaming data cutting and retaining the data,
@@ -12,10 +14,10 @@
 
 export default class CacheBuffer {
 	get byteLength(): number {
-		if (this.byteLength_ === null) {
+		if (!isNumber(this.byteLength_)) {
 			let len = 0;
 
-			for (let i = 0, item; i < this.list_.length; i++) {
+			for (let i = 0, item: Uint8Array; i < this.list_.length; i++) {
 				item = this.list_[i];
 				len += item.byteLength;
 			}

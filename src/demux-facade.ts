@@ -7,6 +7,7 @@ import { Events } from './enum/events';
 import { Context, GlobalOptions, IDemux, PushConf } from './types/globals';
 import EventManager from './util/event-manager';
 import { isArrayBuffer, isUint8Array } from './util/is';
+import logger from './util/logger';
 import Stream from './util/stream';
 
 export default abstract class DemuxFacade extends Stream implements IDemux {
@@ -33,7 +34,7 @@ export default abstract class DemuxFacade extends Stream implements IDemux {
 	protected context_: Context;
 	protected options_: GlobalOptions;
 
-	protected listenEndStream(): void {
+	protected listenEndStream_(): void {
 		this.eventManager_ = new EventManager();
 
 		this.eventManager_
@@ -47,6 +48,10 @@ export default abstract class DemuxFacade extends Stream implements IDemux {
 
 	constructor(options: GlobalOptions = {}) {
 		super();
+
+		if (options.debug) {
+			logger.enable = true;
+		}
 
 		this.context_ = new Context();
 		this.options_ = options;

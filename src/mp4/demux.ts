@@ -16,7 +16,7 @@ export class MP4Demux extends DemuxFacade {
 	constructor(options: GlobalOptions = {}) {
 		super(options);
 
-		super.listenEndStream();
+		super.listenEndStream_();
 	}
 
 	/**
