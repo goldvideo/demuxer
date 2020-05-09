@@ -21,14 +21,14 @@
         }
     </style>
 
-    <script type="text/javascript" src="../../dist/demuxer.mp4.umd.js"></script>
+    <script type="text/javascript" src="../../dist/demuxer.flv.umd.js"></script>
 
     <script type="text/javascript">
-        let tsUrl = './hdr420_480_30s.fmp4';
+        let tsUrl = './h264_aac_1_11025.flv';
 
         fetch(tsUrl).then((res) => {
             res.arrayBuffer().then((bytes) => {
-                let demux = new Demuxer.MP4Demux({
+                let demux = new Demuxer.FLVDemux('mp4', {
                     debug: true
                 });
 
