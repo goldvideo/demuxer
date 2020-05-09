@@ -33,10 +33,14 @@
         {
             "language": "javascript",
             "template": [
-                "@file: <<filename>>, created at <<filecreated('dddd, Do MMMM YYYY h:mm:ss a')>>",
+                "@file: created at <<filecreated('dddd, Do MMMM YYYY h:mm:ss a')>>",
                 "@copyright Copyright (c) 2020",
                 "@author <<author>> <<<authoremail>>>",
             ]
+        },
+        {
+            "language": "typescript",
+            "mapTo": "javascript"
         }
     ]
 }
