@@ -5,7 +5,7 @@
  */
 
 /**
- * Packetized Elementary Stream.
+ * PSI(Program Specific Information)
  */
 
 import PATSection from './structs/patSection';

@@ -11,24 +11,6 @@ import logger from './util/logger';
 import Stream from './util/stream';
 
 export default abstract class DemuxFacade extends Stream implements IDemux {
-	// /**
-	//  * Mux Constructor
-	//  * @param {String} from - the source to demux
-	//  * @param {Object} [options] - mux configure
-	//  */
-	// constructor(from: String, options: GlobalOptions) {
-	// 	super();
-
-	// 	if (options.debug) {
-	// 		logger.enable = true;
-	// 	}
-	// 	/**
-	// 	 * @type {Demux}
-	// 	 * @private
-	// 	 */
-	// 	this._demuxer = new muxers[from](this, options);
-	// }
-
 	readonly endStream?: Stream;
 	protected eventManager_: EventManager;
 	protected context_: Context;
