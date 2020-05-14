@@ -10,7 +10,6 @@
 import DemuxFacade from '../demux-facade';
 import muxErrorCode from '../mux-error-code';
 import { GlobalOptions, PushConf } from '../types/globals';
-import CacheBuffer from '../util/cache-buffer';
 import logger from '../util/logger';
 import PSI from './psi';
 import M2TSComplexStream from './streams/complex';
@@ -23,7 +22,6 @@ const CHUNK_BYTE_LENGTH = 188; // Transport Stream chunks shall be 188 bytes lon
 type InterfaceStream = M2TSComplexStream | ElementaryStream;
 
 export class TSDemux extends DemuxFacade {
-	private cache_buffer_: CacheBuffer;
 	private psi_: PSI;
 	private pesStream_: PesStream;
 	private elementaryStream_: ElementaryStream;
@@ -32,13 +30,12 @@ export class TSDemux extends DemuxFacade {
 	constructor(options: GlobalOptions = {}) {
 		super(options);
 
-		this.cache_buffer_ = new CacheBuffer();
-		this.psi_ = new PSI(this.context_);
-		this.pesStream_ = new PesStream(this.context_, this.psi_);
-		this.elementaryStream_ = new ElementaryStream(this.context_, this.psi_, options);
-		this.complexStream_ = new M2TSComplexStream(this.context_, this.psi_);
+		this.psi_ = new PSI(this.ctx_);
+		this.pesStream_ = new PesStream(this.ctx_, this.psi_);
+		this.elementaryStream_ = new ElementaryStream(this.ctx_, this.psi_, options);
+		this.complexStream_ = new M2TSComplexStream(this.ctx_, this.psi_);
 
-		// concat stream.
+		// Compose pipeline
 		this.pipe(this.pesStream_);
 		this.pesStream_.pipe(this.elementaryStream_);
 		this.elementaryStream_.pipe(this.complexStream_);
@@ -66,29 +63,29 @@ export class TSDemux extends DemuxFacade {
 	 * @param conf.done - If you need the done event, this boolean needs to be set
 	 */
 	push(buffer: ArrayBuffer | Uint8Array, conf: PushConf) {
-		let newBuf: Uint8Array = super.constraintPushData_(buffer);
-
 		const { done } = conf;
-		let cacheByteLength = this.cache_buffer_.byteLength;
+		const { options_, ctx_, cache_buffer_, psi_ } = this;
+		let newBuf: Uint8Array = super.constraintPushData_(buffer);
+		let cacheByteLength = cache_buffer_.byteLength;
 		let byteOffset = null;
 
-		this.options_.config = conf;
+		options_.config = conf;
 
 		logger.log(
 			`hls demux received ${newBuf.byteLength} bytes, cache ${cacheByteLength} bytes. ${done ? 'chunk done' : ''}`
 		);
 
-		this.cache_buffer_.append(newBuf);
+		cache_buffer_.append(newBuf);
 
-		while (this.cache_buffer_.byteLength >= CHUNK_BYTE_LENGTH) {
-			let chunk = this.cache_buffer_.cut(CHUNK_BYTE_LENGTH);
+		while (cache_buffer_.byteLength >= CHUNK_BYTE_LENGTH) {
+			let chunk = cache_buffer_.cut(CHUNK_BYTE_LENGTH);
 
 			// The pushed buffer may be so small that can't cut a ts chunk.
 			if (chunk) {
 				let packet = new Packet(chunk);
 
 				if (packet.valid()) {
-					this.psi_.parse(packet);
+					psi_.parse(packet);
 
 					this.emit('data', packet);
 				} else {
@@ -98,7 +95,7 @@ export class TSDemux extends DemuxFacade {
 
 					this.reset();
 
-					this.context_.emit('error', muxErrorCode.TS_SYNC_BYTE, errMsg, {
+					ctx_.emit('error', muxErrorCode.TS_SYNC_BYTE, errMsg, {
 						startByte: byteOffset,
 						endByte: byteOffset + chunk.byteLength
 					});
@@ -109,7 +106,7 @@ export class TSDemux extends DemuxFacade {
 			}
 		}
 
-		if (this.cache_buffer_.empty && done) {
+		if (cache_buffer_.empty && done) {
 			// logger.log('mux packet done!');
 			this.emit('done');
 		}
