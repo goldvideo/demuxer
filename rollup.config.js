@@ -1,12 +1,30 @@
-import typescript from 'rollup-plugin-typescript2';
 import path from 'path';
+import livereloadPlugin from 'rollup-plugin-livereload';
+import typescriptPlugin from 'rollup-plugin-typescript2';
+import typescript from 'typescript';
+
+const { BUILD_MODE } = process.env;
 
 const getPlugins = function () {
-	return [
-		typescript({
-			tsconfig: path.resolve(__dirname, 'tsconfig.json')
+	// const nodePlugins = [
+	// 	resolvePlugin(),
+	// 	cjsPlugin({
+	// 		transformMixedEsModules: true
+	// 	})
+	// ];
+
+	const plugins = [
+		typescriptPlugin({
+			tsconfig: path.resolve(__dirname, 'tsconfig.json'),
+			typescript
 		})
 	];
+
+	if (BUILD_MODE === 'dev') {
+		plugins.push(livereloadPlugin());
+	}
+
+	return plugins;
 };
 
 let configs = [];
@@ -22,11 +40,11 @@ let formatMaps = [
 	{
 		entry: 'mp4-only',
 		outputName: 'mp4'
+	},
+	{
+		entry: 'flv-only',
+		outputName: 'flv'
 	}
-	// {
-	// 	entry: 'ts-only',
-	// 	outputName: 'ts'
-	// }
 ];
 
 formatMaps.forEach((item, index) => {

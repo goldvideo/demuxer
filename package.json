@@ -3,13 +3,14 @@
   "version": "2.0.0",
   "description": "A utility for transmux ts/mp4/flv",
   "main": "dist/demuxer.all.cjs.js",
+  "module": "dist/demuxer.all.esm.js",
   "directories": {
     "doc": "doc",
     "test": "test"
   },
   "scripts": {
-    "dev": "rollup -wcm ./rollup.config.js",
-    "production": "rollup -c ./rollup.config.js",
+    "dev": "rollup -c ./rollup.config.js -w -m --environment BUILD_MODE:dev",
+    "production": "rollup -c ./rollup.config.js --environment BUILD_MODE:production",
     "test": "karma start",
     "doc": "jsdoc ./src/ -c doc/jsdoc.json"
   },
@@ -18,6 +19,7 @@
   "devDependencies": {
     "@commitlint/cli": "^7.4.0",
     "@commitlint/config-conventional": "^7.3.1",
+    "@types/jasmine": "^3.5.10",
     "@types/node": "^13.13.4",
     "@typescript-eslint/eslint-plugin": "^2.30.0",
     "@typescript-eslint/parser": "^2.30.0",
@@ -27,16 +29,18 @@
     "husky": "^1.3.1",
     "jasmine-core": "^3.4.0",
     "jsdoc": "^3.5.5",
-    "karma": "^3.1.4",
+    "karma": "^5.0.4",
     "karma-chrome-launcher": "^3.0.0",
     "karma-firefox-launcher": "^1.1.0",
     "karma-jasmine": "^2.0.1",
+    "karma-rollup": "^1.0.1",
     "karma-safari-launcher": "^1.0.0",
-    "karma-webpack": "^4.0.2",
+    "karma-typescript": "^5.0.2",
     "lint-staged": "^8.1.4",
     "prettier": "2.0.5",
     "rollup": "^2.8.2",
-    "rollup-plugin-typescript2": "^0.27.0",
+    "rollup-plugin-livereload": "^1.3.0",
+    "rollup-plugin-typescript2": "^0.27.1",
     "typescript": "^3.8.3"
   },
   "config": {
