@@ -7,12 +7,12 @@
 /**
  * @readonly
  * @enum {Number}
- * @export
  */
-let counter = 0;
+enum codes {
+	WORKER_EXCEPTION = 0,
+	WORKER_MSG_EXCEPTION,
+	TS_SYNC_BYTE,
+	FLV_HEAD_SIGNATURE
+}
 
-export default {
-	WORKER_EXCEPTION: counter++,
-	WORKER_MSG_EXCEPTION: counter++,
-	TS_SYNC_BYTE: counter++
-};
+export default codes;
