@@ -27,6 +27,24 @@ export default class CacheBuffer {
 		return this.byteLength_;
 	}
 
+	/**
+	 * maybe return new allocated memory or original memory
+	 */
+	get bytes(): Uint8Array | null {
+		const { bufferList } = this;
+		let bytes = null;
+
+		if (bufferList.length > 0) {
+			if (bufferList.length === 0) {
+				bytes = bufferList[0];
+			} else {
+				bytes = this.toNewBytes();
+			}
+		}
+
+		return bytes;
+	}
+
 	get empty() {
 		return this.list_.length === 0;
 	}
