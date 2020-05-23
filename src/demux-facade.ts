@@ -27,6 +27,9 @@ export default abstract class DemuxFacade extends Stream implements IDemux {
 			})
 			.on(this.endStream, 'done', (data) => {
 				this.emit(Events.DONE, data);
+			})
+			.on(this.ctx_, 'error', (data) => {
+				this.emit(Events.ERROR, data);
 			});
 	}
 

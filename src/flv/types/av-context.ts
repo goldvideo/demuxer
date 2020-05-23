@@ -1,5 +1,11 @@
-import FLVParseStage from '../../enum/flv-parse-stage';
+/**
+ * @file: created at Saturday, 9th May 2020 4:38:35 pm
+ * @copyright Copyright (c) 2020
+ * @author gem <gems.xu@gmail.com>
+ */
+
 import Stream from '../../util/stream';
+import { FLVParseStage } from '../flv-const';
 
 export default class AVContext extends Stream {
 	stage: FLVParseStage;

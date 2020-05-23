@@ -7,12 +7,12 @@
 /**
  * Packetized Elementary Stream.
  */
-import Stream from '../../util/stream';
-import CacheBuffer from '../../util/cache-buffer';
-import PES from '../structs/pes';
 import { Context } from '../../types/globals';
+import CacheBuffer from '../../util/cache-buffer';
+import Stream from '../../util/stream';
 import PSI from '../psi';
 import Packet from '../structs/packet';
+import PES from '../structs/pes';
 import { PESStreamEmitData } from '../types/pipeline';
 
 class PesStream extends Stream {

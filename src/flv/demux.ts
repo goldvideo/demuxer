@@ -1,19 +1,16 @@
 /**
  * flv demuxer.
  */
-import FLVParseStage from 'src/enum/flv-parse-stage';
 import DemuxFacade from '../demux-facade';
 import muxErrorCode from '../mux-error-code';
 import { GlobalOptions, PushConf } from '../types/globals';
+import { isNumber } from '../util/is';
 import logger from '../util/logger';
+import { FLVParseStage, HEAD_LEN, MIN_BODY_LEN } from './flv-const';
 import BodyStream from './streams/body';
 import TagsStream from './streams/tag';
 import FlvHead from './structs/flv-head';
 import AVContext from './types/av-context';
-import { isNumber } from 'src/util/is';
-
-const MIN_HEAD_LEN = 9;
-const MIN_BODY_LEN = 4;
 
 /**
  * flv
@@ -29,6 +26,8 @@ export class FLVDemux extends DemuxFacade {
 
 		this.flv_ = new AVContext();
 		this.flv_.stage = FLVParseStage.HEAD;
+
+		// this. = 0;
 
 		this.body_ = new BodyStream(this.ctx_, this.flv_);
 		this.tags_ = new TagsStream(this.ctx_, this.flv_);
@@ -58,13 +57,19 @@ export class FLVDemux extends DemuxFacade {
 
 		options_.config = conf;
 		if (isNumber(conf.offsetPos)) {
-			flv_.pos = conf.offsetPos;
+			if (cacheByteLength === 0) {
+				if (flv_.pos !== conf.offsetPos) {
+					ctx_.emit('error', muxErrorCode.FLV_NOT_EXPECTED_ADJACENT_DATA);
+				}
+
+				flv_.pos = conf.offsetPos;
+			}
 		}
 
 		cache_buffer_.append(data);
 
 		// if file byteOffset is provided, then specify the stage of parser.
-		if (flv_.pos < MIN_HEAD_LEN) {
+		if (flv_.pos < HEAD_LEN) {
 			flv_.stage === FLVParseStage.HEAD;
 		} else {
 			flv_.stage === FLVParseStage.BODY;
@@ -72,9 +77,9 @@ export class FLVDemux extends DemuxFacade {
 
 		while (true) {
 			if (flv_.stage === FLVParseStage.HEAD) {
-				if (cache_buffer_.byteLength >= MIN_HEAD_LEN) {
+				if (cache_buffer_.byteLength >= HEAD_LEN) {
 					// has enough header
-					let chunk = cache_buffer_.cut(MIN_HEAD_LEN);
+					let chunk = cache_buffer_.cut(HEAD_LEN);
 
 					let head = new FlvHead(chunk);
 
@@ -90,7 +95,7 @@ export class FLVDemux extends DemuxFacade {
 
 						// Change parse state -> body
 						flv_.stage = FLVParseStage.BODY;
-						flv_.pos = MIN_HEAD_LEN;
+						flv_.pos = HEAD_LEN;
 					} else {
 						ctx_.emit('error', muxErrorCode.FLV_HEAD_SIGNATURE);
 						break;
@@ -99,19 +104,10 @@ export class FLVDemux extends DemuxFacade {
 					break;
 				}
 			} else if (flv_.stage === FLVParseStage.BODY) {
-				// At least has 1 body byte to tag stream.
-				if (cache_buffer_.byteLength > MIN_BODY_LEN) {
-					let nextBytes: Uint8Array | null;
+				// At least has 4 body byte to parse
+				if (cache_buffer_.byteLength >= MIN_BODY_LEN) {
 					let cbLen = cache_buffer_.byteLength;
-
-					if (flv_.pos === MIN_HEAD_LEN) {
-						// drop PreviousTagSize0
-						cache_buffer_.cut(MIN_BODY_LEN);
-
-						nextBytes = cache_buffer_.toNewBytes();
-					} else {
-						nextBytes = cache_buffer_.bytes;
-					}
+					let nextBytes = cache_buffer_.bytes;
 
 					cache_buffer_.clear();
 
