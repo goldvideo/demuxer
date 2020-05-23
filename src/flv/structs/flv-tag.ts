@@ -21,6 +21,7 @@ export default class FlvTag extends DataViewReader {
 	streamId: number;
 	payload: Uint8Array;
 	previousTagSize: number;
+	totalSize: number;
 
 	/**
 	 * @param buffer
@@ -41,6 +42,8 @@ export default class FlvTag extends DataViewReader {
 		this.payload = buffer.subarray(11, 11 + this.dataSize);
 
 		this.previousTagSize = this.readUint32(buffer, 11 + this.dataSize);
+
+		this.totalSize = this.previousTagSize + 4;
 	}
 
 	valid(): boolean {

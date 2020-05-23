@@ -50,11 +50,10 @@ class BodyStream extends Stream {
 			buffer = cache_buffer_.bytes;
 
 			if (buffer.length >= MIN_TAG_LEN) {
-				let headSize = 10;
-				let payLoadSize = (buffer[1] << 16) + (buffer[2] << 8) + buffer[3];
+				let tagHeadSize = 11; // 10 is tag header
+				let tagPayloadSize = (buffer[1] << 16) + (buffer[2] << 8) + buffer[3];
 				let previousTagSize = 4;
-
-				let tagSize = headSize + payLoadSize + previousTagSize; // 10 is tag header
+				let tagSize = tagHeadSize + tagPayloadSize + previousTagSize;
 
 				if (buffer.length >= tagSize) {
 					let tagBuffer = cache_buffer_.cut(tagSize);
@@ -62,6 +61,7 @@ class BodyStream extends Stream {
 
 					if (tag.valid()) {
 						this.emit('data', tag);
+						flv_.pos += tag.totalSize;
 					} else {
 						let errMsg = `Encounter invalid flv tag, tag_length(${tag.previousTagSize}), cache_length(${cache_buffer_.byteLength}), data(${tagBuffer})`;
 
