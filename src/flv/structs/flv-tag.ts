@@ -33,11 +33,12 @@ export default class FlvTag extends DataViewReader {
 
 		this.dataSize = this.readUint32(buffer, 0) & 0x00ffffff;
 
-		this.timestamp = this.readUint32(buffer, 4) & 0x00ffffff;
+		let timestamp = this.readUint32(buffer, 3) & 0x00ffffff; // the lower 24 bits of the timestamp
+		let timestampExtended = buffer[7]; // This field represents the upper 8 bits of timestamp
 
-		this.timestampExtended = buffer[7];
+		this.timestamp = (timestampExtended << 24) + timestamp;
 
-		// this.streamId = this.readUint32(buffer, 8) & 0x00ffffff; // Always 0
+		this.streamId = this.readUint32(buffer, 8) & 0x00ffffff; // Always 0
 
 		this.payload = buffer.subarray(11, 11 + this.dataSize);
 

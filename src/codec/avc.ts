@@ -9,7 +9,6 @@
  */
 import EventEmitter from '../util/event-emitter';
 import NALUnit from './avc/nalu';
-import { PESStreamEmitData } from '../m2t/types/pipeline';
 
 interface CachedBytes extends Uint8Array {
 	pts?: number;
@@ -17,7 +16,24 @@ interface CachedBytes extends Uint8Array {
 	startCodeLength?: number;
 }
 
-class AVCCodec extends EventEmitter {
+export type AVCCodecData = {
+	pts: number;
+	dts: number;
+	naluSizeLength?: number;
+	payload: Uint8Array;
+};
+
+export interface AVCDecoderConfigurationRecord {
+	version: number;
+	profile: number;
+	profileCompatibility: number;
+	level: number;
+	naluSizeLength: number;
+	spsNalus: Uint8Array[];
+	ppsNalus: Uint8Array[];
+}
+
+export class AVCCodec extends EventEmitter {
 	private cachedBytes?: CachedBytes;
 
 	constructor() {
@@ -26,30 +42,27 @@ class AVCCodec extends EventEmitter {
 		this.cachedBytes = null;
 	}
 
-	push(data: PESStreamEmitData) {
+	push(data: AVCCodecData) {
 		let self = this;
 		let i = 0,
 			naluOffset = 0,
 			lastStartCodeLength = 0;
-		let pesPacket = data.pes;
-		let pts = pesPacket.PTS,
-			dts = pesPacket.DTS;
-		let pes_data_byte = pesPacket.data_byte;
+		let { pts, dts, payload, naluSizeLength } = data;
 		let data_byte;
 
 		if (this.cachedBytes) {
 			try {
-				data_byte = new Uint8Array(this.cachedBytes.byteLength + pes_data_byte.byteLength);
+				data_byte = new Uint8Array(this.cachedBytes.byteLength + payload.byteLength);
 			} catch (e) {
-				throw `h264 alloc mem error ${this.cachedBytes.byteLength}/${pes_data_byte.byteLength}`;
+				throw `h264 alloc mem error ${this.cachedBytes.byteLength}/${payload.byteLength}`;
 			}
 			data_byte.set(this.cachedBytes);
-			data_byte.set(pes_data_byte, this.cachedBytes.byteLength);
+			data_byte.set(payload, this.cachedBytes.byteLength);
 		} else {
-			data_byte = pes_data_byte;
+			data_byte = payload;
 		}
-		/** 有naluSizeLength即以size+data结构解析 否则按照固定拆分解 */
-		if (!pesPacket.hasOwnProperty('naluSizeLength')) {
+
+		if (!naluSizeLength) {
 			let j = data_byte.byteLength - 1;
 			let dropZerosLength = 0;
 
@@ -123,7 +136,6 @@ class AVCCodec extends EventEmitter {
 				}
 			} while (i < data_byte.length);
 		} else {
-			let naluSizeLength = pesPacket['naluSizeLength'];
 			let startPos = 0,
 				size = 0,
 				endPos = 0;
@@ -168,5 +180,3 @@ class AVCCodec extends EventEmitter {
 		this.cachedBytes = null;
 	}
 }
-
-export default AVCCodec;

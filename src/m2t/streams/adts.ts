@@ -7,21 +7,13 @@
 /**
  * ADTS(Audio Data Transport Stream) Stream.
  */
-import Stream from '../../util/stream';
-import StreamType from '../../enum/stream-types';
-import ADTSCodec from '../../codec/adts';
+import { AACFrame } from '../../codec/aac/aac';
 import getAudioConfig from '../../codec/aac/aac-config';
+import ADTSCodec from '../../codec/adts';
+import StreamType from '../../enum/stream-types';
+import Stream from '../../util/stream';
 import PSI from '../psi';
-import { AACFrame } from 'src/codec/aac/aac';
-
-interface AACFrameList extends Array<AACFrame> {
-	type?: string;
-	trackId?: number;
-	byteLength?: number;
-	firstDTS?: number;
-	firstPTS?: number;
-	duration?: number;
-}
+import { AACFrameList, PESStreamEmitData } from '../types/pipeline';
 
 class ADTSStream extends Stream {
 	private PSI: PSI;
@@ -47,11 +39,15 @@ class ADTSStream extends Stream {
 		this._newFrames();
 	}
 
-	push(data) {
+	push(data: PESStreamEmitData) {
 		if (data.stream_type === StreamType.ADTS) {
 			this.trackId = data.pid;
 
-			this.codec.push(data);
+			this.codec.push({
+				dts: data.pes.DTS,
+				pts: data.pes.PTS,
+				payload: data.pes.data_byte
+			});
 		}
 	}
 

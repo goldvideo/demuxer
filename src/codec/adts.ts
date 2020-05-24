@@ -9,24 +9,13 @@
  * Wiki Refer: https://wiki.multimedia.cx/index.php?title=ADTS
  */
 import EventEmitter from '../util/event-emitter';
-import { AACFrame } from './aac/aac';
-import { PESStreamEmitData } from '../m2t/types/pipeline';
+import { AACFrame, AAC_SAMPLING_FREQUENCIES } from './aac/aac';
 
-const ADTS_SAMPLING_FREQUENCIES = [
-	96000,
-	88200,
-	64000,
-	48000,
-	44100,
-	32000,
-	24000,
-	22050,
-	16000,
-	12000,
-	11025,
-	8000,
-	7350
-];
+export type AACCodecData = {
+	pts: number;
+	dts: number;
+	payload: Uint8Array;
+};
 
 /**
  * @extends EventEmitter
@@ -36,12 +25,9 @@ class ADTSCodec extends EventEmitter {
 		super();
 	}
 
-	push(data: PESStreamEmitData) {
-		let pesPacket = data.pes;
-		let pts = pesPacket.PTS,
-			dts = pesPacket.DTS;
-		let pes_data_byte = pesPacket.data_byte;
-		let data_byte;
+	push(data: AACCodecData) {
+		let { pts, dts, payload } = data;
+		let data_byte = payload;
 		let i = 0,
 			frameNum = 0,
 			frameLength,
@@ -49,8 +35,6 @@ class ADTSCodec extends EventEmitter {
 			frameEnd,
 			sampleCount,
 			adtsFrameDuration;
-
-		data_byte = pes_data_byte;
 
 		while (i + 5 < data_byte.length) {
 			// Look for the start of an ADTS header..
@@ -71,7 +55,7 @@ class ADTSCodec extends EventEmitter {
 				((data_byte[i + 3] & 0x03) << 11) | (data_byte[i + 4] << 3) | ((data_byte[i + 5] & 0xe0) >> 5);
 
 			sampleCount = ((data_byte[i + 6] & 0x03) + 1) * 1024;
-			adtsFrameDuration = (sampleCount * 90000) / ADTS_SAMPLING_FREQUENCIES[(data_byte[i + 2] & 0x3c) >>> 2];
+			adtsFrameDuration = (sampleCount * 90000) / AAC_SAMPLING_FREQUENCIES[(data_byte[i + 2] & 0x3c) >>> 2];
 
 			frameEnd = i + frameLength;
 
@@ -87,7 +71,7 @@ class ADTSCodec extends EventEmitter {
 				sampleCount: sampleCount,
 				audioObjectType: ((data_byte[i + 2] >>> 6) & 0x03) + 1,
 				channelCount: ((data_byte[i + 2] & 1) << 2) | ((data_byte[i + 3] & 0xc0) >>> 6),
-				sampleRate: ADTS_SAMPLING_FREQUENCIES[(data_byte[i + 2] & 0x3c) >>> 2],
+				sampleRate: AAC_SAMPLING_FREQUENCIES[(data_byte[i + 2] & 0x3c) >>> 2],
 				samplingFrequencyIndex: (data_byte[i + 2] & 0x3c) >>> 2,
 				// assume ISO/IEC 14496-12 AudioSampleEntry default of 16
 				sampleSize: 16,

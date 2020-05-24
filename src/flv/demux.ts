@@ -29,8 +29,8 @@ export class FLVDemux extends DemuxFacade {
 
 		// this. = 0;
 
-		this.body_ = new BodyStream(this.ctx_, this.flv_);
-		this.tags_ = new TagsStream(this.ctx_, this.flv_);
+		this.body_ = new BodyStream(this.ctx_, this.flv_, options);
+		this.tags_ = new TagsStream(this.ctx_, this.flv_, options);
 
 		// Compose pipeline
 		this.pipe(this.body_);

@@ -16,14 +16,15 @@ import AVContext from '../types/av-context';
 class BodyStream extends Stream {
 	private ctx_: Context;
 	private flv_: AVContext;
-	private options: GlobalOptions;
+	private options_: GlobalOptions;
 	private cache_buffer_: CacheBuffer;
 
-	constructor(ctx: Context, flvCtx: AVContext) {
+	constructor(ctx: Context, flvCtx: AVContext, options: GlobalOptions = {}) {
 		super();
 
 		this.ctx_ = ctx;
 		this.flv_ = flvCtx;
+		this.options_ = options;
 		this.cache_buffer_ = new CacheBuffer();
 	}
 

@@ -10,7 +10,7 @@ export type PushConf = Partial<{
 
 export type GlobalOptions = Partial<{
 	debug: boolean;
-	complex: boolean;
+	decodeCodec: boolean;
 	config: PushConf;
 }>;
 

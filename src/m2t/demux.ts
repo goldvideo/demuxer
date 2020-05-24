@@ -49,7 +49,7 @@ export class TSDemux extends DemuxFacade {
 	get endStream(): InterfaceStream {
 		let stream: InterfaceStream = this.elementaryStream_;
 
-		if (this.options_.complex) {
+		if (this.options_.decodeCodec) {
 			stream = this.complexStream_;
 		}
 

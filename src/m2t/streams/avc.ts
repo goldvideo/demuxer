@@ -7,7 +7,7 @@
 /**
  * H.264/AVC/HEVC Stream.
  */
-import AVCCodec from '../../codec/avc';
+import { AVCCodec, AVCCodecData } from '../../codec/avc';
 import getAVCConfig from '../../codec/avc/avc-config';
 import NALU from '../../codec/avc/nalu';
 import NaluTypes from '../../enum/nalu-types';
@@ -69,10 +69,17 @@ class H264Stream extends Stream {
 	 * @param data
 	 */
 	push(data: PESStreamEmitData) {
-		if (data.stream_type === StreamType.H264 || data.stream_type === StreamType.HEVC) {
-			this.trackId = data.pid;
+		const { stream_type, pes, pid } = data;
+		if (stream_type === StreamType.H264 || stream_type === StreamType.HEVC) {
+			this.trackId = pid;
 
-			this.codec.push(data);
+			let rawData: AVCCodecData = {
+				pts: pes.PTS,
+				dts: pes.DTS,
+				payload: pes.data_byte
+			};
+
+			this.codec.push(rawData);
 		}
 	}
 

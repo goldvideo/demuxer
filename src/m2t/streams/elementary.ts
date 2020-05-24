@@ -40,38 +40,40 @@ class ElementaryStream extends Stream {
 		this.avcStream = new AVCStream(psi);
 		this.streams = [this.adtsStream, this.avcStream];
 
-		this.avcStream.on('data', (data: GOPVector) => {
-			let stubTime = options.config.stubTime;
+		if (options.decodeCodec) {
+			this.avcStream.on('data', (data: GOPVector) => {
+				let stubTime = options.config.stubTime;
 
-			if (isNumber(stubTime)) {
-				let end = (data.firstPTS + data.duration) / 90000;
-				if (end < stubTime) {
-					logger.warn(`drop avc gop, start/end/stubTime(${data.firstPTS}/${end}/${stubTime})`);
-					return;
+				if (isNumber(stubTime)) {
+					let end = (data.firstPTS + data.duration) / 90000;
+					if (end < stubTime) {
+						logger.warn(`drop avc gop, start/end/stubTime(${data.firstPTS}/${end}/${stubTime})`);
+						return;
+					}
 				}
-			}
 
-			this.tracks.push(data);
-			this.emit('data', this.tracks);
-			this.tracks = [];
-			this.adtsStream.flush();
-		});
+				this.tracks.push(data);
+				this.emit('data', this.tracks);
+				this.tracks = [];
+				this.adtsStream.flush();
+			});
 
-		this.adtsStream.on('data', (data) => {
-			let stubTime = options.config.stubTime;
+			this.adtsStream.on('data', (data) => {
+				let stubTime = options.config.stubTime;
 
-			if (isNumber(stubTime)) {
-				let end = (data.firstPTS + data.duration) / 90000;
-				if (end < stubTime) {
-					logger.warn(`drop adts, start/end/stubTime(${data.firstPTS}/${end}/${stubTime})`);
-					return;
+				if (isNumber(stubTime)) {
+					let end = (data.firstPTS + data.duration) / 90000;
+					if (end < stubTime) {
+						logger.warn(`drop adts, start/end/stubTime(${data.firstPTS}/${end}/${stubTime})`);
+						return;
+					}
 				}
-			}
 
-			this.tracks.push(data);
-			this.emit('data', this.tracks);
-			this.tracks = [];
-		});
+				this.tracks.push(data);
+				this.emit('data', this.tracks);
+				this.tracks = [];
+			});
+		}
 	}
 
 	/**
@@ -82,7 +84,7 @@ class ElementaryStream extends Stream {
 		const { options, adtsStream, avcStream } = this;
 		let { stream_type } = data;
 
-		if (options.complex) {
+		if (options.decodeCodec) {
 			switch (stream_type) {
 				case StreamType.H264:
 				case StreamType.HEVC:
@@ -100,16 +102,20 @@ class ElementaryStream extends Stream {
 	}
 
 	flush(): void {
+		let { streams, tracks } = this;
 		for (let i = 0; i < this.streams.length; i++) {
-			let stream = this.streams[i];
+			let stream = streams[i];
 
 			stream.flush();
 		}
 
-		this.emit('data', this.tracks);
+		if (tracks.length > 0) {
+			this.emit('data', tracks);
+		}
+
 		this.emit('done');
 
-		this.tracks = [];
+		tracks.splice(0, tracks.length);
 	}
 
 	reset(): void {

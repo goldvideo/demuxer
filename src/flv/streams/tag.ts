@@ -7,31 +7,33 @@
 /**
  * FLV Tags Stream.
  */
-import { Context } from '../../types/globals';
+import FlvTagTypes from '../../enum/flv-tag-types';
+import { Context, GlobalOptions } from '../../types/globals';
+import logger from '../../util/logger';
 import Stream from '../../util/stream';
-import AVContext from '../types/av-context';
-import ADTSStream from './adts';
-import AVCStream from './avc';
-import FlvTagTypes from 'src/enum/flv-tag-types';
-import logger from 'src/util/logger';
-import FlvTag from '../structs/flv-tag';
 import { AMFdeSerialize } from '../structs/flv-amf';
-// import { PESStreamEmitData, GOPVector } from '../types/pipeline';
+import FlvTag from '../structs/flv-tag';
+import FlvTagAudioData from '../structs/flv-tag-audio-data';
+import FlvTagVideoData from '../structs/flv-tag-video-data';
+import AVContext from '../types/av-context';
+import { PipelineContext, TagEmitData } from '../types/flv-pipeline';
 
 class TagsStream extends Stream {
-	private ctx_: Context;
 	private flv_: AVContext;
+	private options_: GlobalOptions;
+	private pipeCtx: PipelineContext;
 
-	// private tracks: Array<GOPVector>;
-	private adtsStream: ADTSStream;
-	private avcStream: AVCStream;
-	private streams: [ADTSStream, AVCStream];
-
-	constructor(ctx: Context, flv: AVContext) {
+	constructor(ctx: Context, flv: AVContext, options: GlobalOptions = {}) {
 		super();
 
-		this.ctx_ = ctx;
 		this.flv_ = flv;
+		this.options_ = options;
+
+		this.pipeCtx = {
+			ctx,
+			flv,
+			options
+		};
 	}
 
 	push(tag: FlvTag) {
@@ -40,8 +42,10 @@ class TagsStream extends Stream {
 				this.parseScriptData_(tag.payload);
 				break;
 			case FlvTagTypes.VIDEO:
+				this.parseVideoData_(tag);
 				break;
 			case FlvTagTypes.AUDIO:
+				this.parseAudioData_(tag);
 				break;
 			default:
 				logger.error(`still not supported flv tag type ${tag.tagType}`);
@@ -67,6 +71,53 @@ class TagsStream extends Stream {
 			tagType: FlvTagTypes.SCRIPT_DATA,
 			...result
 		});
+	}
+
+	private parseVideoData_(tag: FlvTag) {
+		const { flv_ } = this;
+		const data = new FlvTagVideoData(this.pipeCtx, tag.payload, tag.timestamp);
+
+		let ret: TagEmitData = {
+			type: 'tag',
+			tagType: FlvTagTypes.VIDEO,
+			timestamp: tag.timestamp,
+			...data
+		};
+
+		flv_.emit('data', ret);
+	}
+
+	private parseAudioData_(tag: FlvTag) {
+		const { options_, flv_ } = this;
+
+		const data = new FlvTagAudioData(tag.payload, tag.timestamp);
+		const { sampleSize, soundData } = data;
+
+		if (soundData.audioSpecificConfig) {
+			flv_.audioSpecificConfig = soundData.audioSpecificConfig;
+		} else {
+			// let stubTime = options_.config.stubTime;
+			// if (isNumber(stubTime)) {
+			// 	let start = soundData.pts;
+			// 	let duration =
+			// 		soundData.pts +
+			// 		soundData.payload.byteLength / (sampleSize / 8) / flv_.audioSpecificConfig.sampleCount;
+			// 	let end = start + duration;
+			// 	if (end < stubTime) {
+			// 		logger.warn(`drop aac tag, start/end/stubTime(${start}/${end}/${stubTime})`);
+			// 		return;
+			// 	}
+			// }
+		}
+
+		let ret: TagEmitData = {
+			type: 'tag',
+			tagType: FlvTagTypes.AUDIO,
+			timestamp: tag.timestamp,
+			...data
+		};
+
+		flv_.emit('data', ret);
 	}
 }
 
