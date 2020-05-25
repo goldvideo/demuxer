@@ -11,9 +11,7 @@
 -   Support push streaming-data to demux
 -   Tree-shakable (The version coded with full code does not need to worry about the reference size. When the business only refers to a certain format of decoding, the overall code supports tree-shaking)
 
--   Any-combination packaging (These formats can be packaged according to requirements, users do not need to package all the code
-    )
-    )
+-   Any-combination packaging (These formats can be packaged according to requirements, users do not need to package all the code)
 
 ## Demos
 
