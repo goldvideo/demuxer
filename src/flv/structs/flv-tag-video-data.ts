@@ -21,34 +21,34 @@ import AVCVideoPacket from './flv-tag-avc-video-packet';
 // Video frame payload or UI8 (see note following table)
 
 export enum VideoCodecIDs {
-	AVC = 7 // AVC_VIDEO_PACKET
+    AVC = 7 // AVC_VIDEO_PACKET
 }
 
 /**
  * @extends DataViewReader
  */
 export default class FlvTagVideoData extends DataViewReader {
-	frameType: number;
-	isKeyframe: boolean;
-	codecId: VideoCodecIDs;
-	videoData: AVCVideoPacket;
+    frameType: number;
+    isKeyframe: boolean;
+    codecId: VideoCodecIDs;
+    videoData: AVCVideoPacket;
 
-	/**
-	 * @param buffer
-	 */
-	constructor(pipeCtx: PipelineContext, buffer: Uint8Array, timestamp: number) {
-		super();
+    /**
+     * @param buffer
+     */
+    constructor(pipeCtx: PipelineContext, buffer: Uint8Array, timestamp: number) {
+        super();
 
-		this.frameType = (buffer[0] >> 4) & 0x0f;
-		this.isKeyframe = this.frameType === 1;
-		this.codecId = buffer[0] & 0x0f;
+        this.frameType = (buffer[0] >> 4) & 0x0f;
+        this.isKeyframe = this.frameType === 1;
+        this.codecId = buffer[0] & 0x0f;
 
-		switch (this.codecId) {
-			case VideoCodecIDs.AVC:
-				this.videoData = new AVCVideoPacket(pipeCtx, buffer.subarray(1), timestamp);
-				break;
-			default:
-				logger.error(`flv tag videoData encounter unknown codecId ${this.codecId}`);
-		}
-	}
+        switch (this.codecId) {
+            case VideoCodecIDs.AVC:
+                this.videoData = new AVCVideoPacket(pipeCtx, buffer.subarray(1), timestamp);
+                break;
+            default:
+                logger.error(`flv tag videoData encounter unknown codecId ${this.codecId}`);
+        }
+    }
 }

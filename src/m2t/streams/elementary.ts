@@ -21,114 +21,114 @@ import ADTSStream from './adts';
 import AVCStream from './avc';
 
 class ElementaryStream extends Stream {
-	private context: Context;
-	private PSI: PSI;
-	private options: GlobalOptions;
-	private tracks: Array<GOPVector>;
-	private adtsStream: ADTSStream;
-	private avcStream: AVCStream;
-	private streams: [ADTSStream, AVCStream];
+    private context: Context;
+    private PSI: PSI;
+    private options: GlobalOptions;
+    private tracks: Array<GOPVector>;
+    private adtsStream: ADTSStream;
+    private avcStream: AVCStream;
+    private streams: [ADTSStream, AVCStream];
 
-	constructor(ctx: Context, psi: PSI, options: GlobalOptions = {}) {
-		super();
+    constructor(ctx: Context, psi: PSI, options: GlobalOptions = {}) {
+        super();
 
-		this.context = ctx;
-		this.PSI = psi;
-		this.options = options;
-		this.tracks = [];
-		this.adtsStream = new ADTSStream(psi);
-		this.avcStream = new AVCStream(psi);
-		this.streams = [this.adtsStream, this.avcStream];
+        this.context = ctx;
+        this.PSI = psi;
+        this.options = options;
+        this.tracks = [];
+        this.adtsStream = new ADTSStream(psi);
+        this.avcStream = new AVCStream(psi);
+        this.streams = [this.adtsStream, this.avcStream];
 
-		if (options.decodeCodec) {
-			this.avcStream.on('data', (data: GOPVector) => {
-				let stubTime = options.config.stubTime;
+        if (options.decodeCodec) {
+            this.avcStream.on('data', (data: GOPVector) => {
+                let stubTime = options.config.stubTime;
 
-				if (isNumber(stubTime)) {
-					let end = (data.firstPTS + data.duration) / 90000;
-					if (end < stubTime) {
-						logger.warn(`drop avc gop, start/end/stubTime(${data.firstPTS}/${end}/${stubTime})`);
-						return;
-					}
-				}
+                if (isNumber(stubTime)) {
+                    let end = (data.firstPTS + data.duration) / 90000;
+                    if (end < stubTime) {
+                        logger.warn(`drop avc gop, start/end/stubTime(${data.firstPTS}/${end}/${stubTime})`);
+                        return;
+                    }
+                }
 
-				this.tracks.push(data);
-				this.emit('data', this.tracks);
-				this.tracks = [];
-				this.adtsStream.flush();
-			});
+                this.tracks.push(data);
+                this.emit('data', this.tracks);
+                this.tracks = [];
+                this.adtsStream.flush();
+            });
 
-			this.adtsStream.on('data', (data) => {
-				let stubTime = options.config.stubTime;
+            this.adtsStream.on('data', (data) => {
+                let stubTime = options.config.stubTime;
 
-				if (isNumber(stubTime)) {
-					let end = (data.firstPTS + data.duration) / 90000;
-					if (end < stubTime) {
-						logger.warn(`drop adts, start/end/stubTime(${data.firstPTS}/${end}/${stubTime})`);
-						return;
-					}
-				}
+                if (isNumber(stubTime)) {
+                    let end = (data.firstPTS + data.duration) / 90000;
+                    if (end < stubTime) {
+                        logger.warn(`drop adts, start/end/stubTime(${data.firstPTS}/${end}/${stubTime})`);
+                        return;
+                    }
+                }
 
-				this.tracks.push(data);
-				this.emit('data', this.tracks);
-				this.tracks = [];
-			});
-		}
-	}
+                this.tracks.push(data);
+                this.emit('data', this.tracks);
+                this.tracks = [];
+            });
+        }
+    }
 
-	/**
-	 * Push a complete pes
-	 * @param data
-	 */
-	push(data: PESStreamEmitData): void {
-		const { options, adtsStream, avcStream } = this;
-		let { stream_type } = data;
+    /**
+     * Push a complete pes
+     * @param data
+     */
+    push(data: PESStreamEmitData): void {
+        const { options, adtsStream, avcStream } = this;
+        let { stream_type } = data;
 
-		if (options.decodeCodec) {
-			switch (stream_type) {
-				case StreamType.H264:
-				case StreamType.HEVC:
-					avcStream.push(data);
-					break;
-				case StreamType.ADTS:
-					adtsStream.push(data);
-					break;
-				default:
-					logger.warn(`ts elementary encounter unknown stream type ${stream_type}`);
-			}
-		} else {
-			this.emit('data', data);
-		}
-	}
+        if (options.decodeCodec) {
+            switch (stream_type) {
+                case StreamType.H264:
+                case StreamType.HEVC:
+                    avcStream.push(data);
+                    break;
+                case StreamType.ADTS:
+                    adtsStream.push(data);
+                    break;
+                default:
+                    logger.warn(`ts elementary encounter unknown stream type ${stream_type}`);
+            }
+        } else {
+            this.emit('data', data);
+        }
+    }
 
-	flush(): void {
-		let { streams, tracks } = this;
-		for (let i = 0; i < this.streams.length; i++) {
-			let stream = streams[i];
+    flush(): void {
+        let { streams, tracks } = this;
+        for (let i = 0; i < this.streams.length; i++) {
+            let stream = streams[i];
 
-			stream.flush();
-		}
+            stream.flush();
+        }
 
-		if (tracks.length > 0) {
-			this.emit('data', tracks);
-		}
+        if (tracks.length > 0) {
+            this.emit('data', tracks);
+        }
 
-		this.emit('done');
+        this.emit('done');
 
-		tracks.splice(0, tracks.length);
-	}
+        tracks.splice(0, tracks.length);
+    }
 
-	reset(): void {
-		this.tracks = [];
+    reset(): void {
+        this.tracks = [];
 
-		for (let i = 0; i < this.streams.length; i++) {
-			let stream = this.streams[i];
+        for (let i = 0; i < this.streams.length; i++) {
+            let stream = this.streams[i];
 
-			stream.reset();
-		}
+            stream.reset();
+        }
 
-		this.emit('reset');
-	}
+        this.emit('reset');
+    }
 }
 
 export default ElementaryStream;

@@ -12,60 +12,60 @@ import { PushConf } from '../types/globals';
 import EventEmitter from './event-emitter';
 
 class Stream extends EventEmitter {
-	constructor() {
-		super();
-	}
+    constructor() {
+        super();
+    }
 
-	/**
-	 * connect to the next pipeline stream.
-	 * @param destination
-	 */
-	pipe(destination: Stream): Stream {
-		this.on('reset', function () {
-			destination.reset();
-		});
+    /**
+     * connect to the next pipeline stream.
+     * @param destination
+     */
+    pipe(destination: Stream): Stream {
+        this.on('reset', function () {
+            destination.reset();
+        });
 
-		this.on('data', function (data) {
-			destination.push(data);
-		});
+        this.on('data', function (data) {
+            destination.push(data);
+        });
 
-		this.on('done', function (flushSource) {
-			destination.flush(flushSource);
-		});
+        this.on('done', function (flushSource) {
+            destination.flush(flushSource);
+        });
 
-		return destination;
-	}
+        return destination;
+    }
 
-	/**
-	 * detaches the next pipeline stream previously attached.
-	 */
-	unpipe(): Stream {
-		this.removeAllListeners('reset');
-		this.removeAllListeners('data');
-		this.removeAllListeners('done');
+    /**
+     * detaches the next pipeline stream previously attached.
+     */
+    unpipe(): Stream {
+        this.removeAllListeners('reset');
+        this.removeAllListeners('data');
+        this.removeAllListeners('done');
 
-		return this;
-	}
+        return this;
+    }
 
-	/**
-	 * push data to current pipeline.
-	 * @param data
-	 */
-	push(data: any, conf?: PushConf): void {
-		this.emit('data', data);
-	}
+    /**
+     * push data to current pipeline.
+     * @param data
+     */
+    push(data: any, conf?: PushConf): void {
+        this.emit('data', data);
+    }
 
-	/**
-	 * flush current pipeline.
-	 * @param flushSource
-	 */
-	flush(flushSource: Stream): void {
-		this.emit('done', flushSource);
-	}
+    /**
+     * flush current pipeline.
+     * @param flushSource
+     */
+    flush(flushSource: Stream): void {
+        this.emit('done', flushSource);
+    }
 
-	reset(): void {
-		this.emit('reset');
-	}
+    reset(): void {
+        this.emit('reset');
+    }
 }
 
 export default Stream;

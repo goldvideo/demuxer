@@ -11,10 +11,10 @@ let global: any;
 
 // see https://stackoverflow.com/a/11237259/589493
 if (typeof window === 'undefined') {
-	/* eslint-disable-next-line no-undef */
-	global = self;
+    /* eslint-disable-next-line no-undef */
+    global = self;
 } else {
-	global = window;
+    global = window;
 }
 
 export default global;

@@ -5,9 +5,9 @@
  */
 
 enum FlvTagTypes {
-	SCRIPT_DATA = 18,
-	VIDEO = 9,
-	AUDIO = 8
+    SCRIPT_DATA = 18,
+    VIDEO = 9,
+    AUDIO = 8
 }
 
 export default FlvTagTypes;

@@ -18,15 +18,15 @@ interface VideoData extends FlvTagVideoData {}
 interface AudioData extends FlvTagAudioData {}
 
 export type TagEmitData = {
-	type: string;
-	tagType: FlvTagTypes;
-	timestamp: number;
+    type: string;
+    tagType: FlvTagTypes;
+    timestamp: number;
 } & Partial<VideoData | AudioData>;
 
 export interface PipelineContext {
-	ctx: Context;
-	options: GlobalOptions;
-	flv: AVContext;
+    ctx: Context;
+    options: GlobalOptions;
+    flv: AVContext;
 }
 
 export type AACPipelineData = Pick<AACAudioData, 'dts' | 'pts' | 'aacPacketType' | 'payload' | 'audioSpecificConfig'>;

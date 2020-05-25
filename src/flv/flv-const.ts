@@ -10,6 +10,6 @@ export const PREVIOUS_TAG_SIZE = 4;
 export const MIN_TAG_LEN = PREVIOUS_TAG_SIZE;
 
 export enum FLVParseStage {
-	HEAD = 0,
-	BODY
+    HEAD = 0,
+    BODY
 }

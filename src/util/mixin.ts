@@ -17,35 +17,35 @@ export default mixin;
  * @param deepStringMixin
  */
 function mixin(target: object, source: object, force: boolean = false, deepStringMixin: boolean = false) {
-	function hasProp(obj, prop) {
-		return Object.prototype.hasOwnProperty.call(obj, prop);
-	}
+    function hasProp(obj, prop) {
+        return Object.prototype.hasOwnProperty.call(obj, prop);
+    }
 
-	function eachProp(obj, func) {
-		var prop;
-		for (prop in obj) {
-			if (hasProp(obj, prop)) {
-				if (func(obj[prop], prop)) {
-					break;
-				}
-			}
-		}
-	}
+    function eachProp(obj, func) {
+        var prop;
+        for (prop in obj) {
+            if (hasProp(obj, prop)) {
+                if (func(obj[prop], prop)) {
+                    break;
+                }
+            }
+        }
+    }
 
-	if (source) {
-		eachProp(source, (value, prop) => {
-			if (force || !hasProp(target, prop)) {
-				if (deepStringMixin && typeof value !== 'string' && typeof value !== 'boolean') {
-					if (!target[prop]) {
-						target[prop] = {};
-					}
-					mixin(target[prop], value, force, deepStringMixin);
-				} else {
-					target[prop] = value;
-				}
-			}
-		});
-	}
+    if (source) {
+        eachProp(source, (value, prop) => {
+            if (force || !hasProp(target, prop)) {
+                if (deepStringMixin && typeof value !== 'string' && typeof value !== 'boolean') {
+                    if (!target[prop]) {
+                        target[prop] = {};
+                    }
+                    mixin(target[prop], value, force, deepStringMixin);
+                } else {
+                    target[prop] = value;
+                }
+            }
+        });
+    }
 
-	return target;
+    return target;
 }

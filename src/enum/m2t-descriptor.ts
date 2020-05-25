@@ -10,13 +10,13 @@
  * @see DVB/SI, Table 12= Possible locations of descriptors
  */
 const enum Descriptors {
-	VIDEO_STREAM = 0x02,
-	AUDIO_STREAM = 0x03,
-	CA = 0x09,
-	IOD = 0x1d,
-	MPEG4_VIDEO = 0x1b,
-	MPEG4_AUDIO = 0x1c,
-	SERVICE = 0x48
+    VIDEO_STREAM = 0x02,
+    AUDIO_STREAM = 0x03,
+    CA = 0x09,
+    IOD = 0x1d,
+    MPEG4_VIDEO = 0x1b,
+    MPEG4_AUDIO = 0x1c,
+    SERVICE = 0x48
 }
 
 export default Descriptors;

@@ -11,5 +11,5 @@ export type SEIProps = {};
  * @param payload
  */
 export function decodeSEI(payload: Uint8Array): SEIProps {
-	return {};
+    return {};
 }

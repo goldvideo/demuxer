@@ -25,17 +25,17 @@
 */
 
 const enum NaluTypes {
-	NON_IDR_SLICE = 0x01,
-	DPA_SLICE = 0x02,
-	DPB_SLICE = 0x03,
-	DPC_SLICE = 0x04,
-	IDR_SLICE = 0x05,
-	SEI = 0x06,
-	SPS = 0x07,
-	PPS = 0x08,
-	AUD = 0x09,
-	END_SEQUENCE = 0x0a,
-	END_STREAM = 0x0b
+    NON_IDR_SLICE = 0x01,
+    DPA_SLICE = 0x02,
+    DPB_SLICE = 0x03,
+    DPC_SLICE = 0x04,
+    IDR_SLICE = 0x05,
+    SEI = 0x06,
+    SPS = 0x07,
+    PPS = 0x08,
+    AUD = 0x09,
+    END_SEQUENCE = 0x0a,
+    END_STREAM = 0x0b
 }
 
 export default NaluTypes;

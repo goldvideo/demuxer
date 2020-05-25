@@ -12,69 +12,69 @@ import logger from './util/logger';
 import Stream from './util/stream';
 
 export default abstract class DemuxFacade extends Stream implements IDemux {
-	readonly endStream?: Stream;
-	protected eventManager_: EventManager;
-	protected ctx_: Context;
-	protected options_: GlobalOptions;
-	protected cache_buffer_: CacheBuffer;
+    readonly endStream?: Stream;
+    protected eventManager_: EventManager;
+    protected ctx_: Context;
+    protected options_: GlobalOptions;
+    protected cache_buffer_: CacheBuffer;
 
-	protected listenEndStream_(): void {
-		this.eventManager_ = new EventManager();
+    protected listenEndStream_(): void {
+        this.eventManager_ = new EventManager();
 
-		this.eventManager_
-			.on(this.endStream, 'data', (data) => {
-				this.emit(Events.DEMUX_DATA, data);
-			})
-			.on(this.endStream, 'done', (data) => {
-				this.emit(Events.DONE, data);
-			})
-			.on(this.ctx_, 'error', (data) => {
-				this.emit(Events.ERROR, data);
-			});
-	}
+        this.eventManager_
+            .on(this.endStream, 'data', (data) => {
+                this.emit(Events.DEMUX_DATA, data);
+            })
+            .on(this.endStream, 'done', (data) => {
+                this.emit(Events.DONE, data);
+            })
+            .on(this.ctx_, 'error', (data) => {
+                this.emit(Events.ERROR, data);
+            });
+    }
 
-	constructor(options: GlobalOptions = {}) {
-		super();
+    constructor(options: GlobalOptions = {}) {
+        super();
 
-		if (options.debug) {
-			logger.enable = true;
-		}
+        if (options.debug) {
+            logger.enable = true;
+        }
 
-		this.ctx_ = new Context();
-		this.options_ = options;
-		this.cache_buffer_ = new CacheBuffer();
-	}
+        this.ctx_ = new Context();
+        this.options_ = options;
+        this.cache_buffer_ = new CacheBuffer();
+    }
 
-	/**
-	 * Pipe the arrayBuffer to the demuxer.
-	 * @param buf
-	 * @param conf
-	 */
-	abstract push(buf: ArrayBuffer | Uint8Array, conf: PushConf): void;
+    /**
+     * Pipe the arrayBuffer to the demuxer.
+     * @param buf
+     * @param conf
+     */
+    abstract push(buf: ArrayBuffer | Uint8Array, conf: PushConf): void;
 
-	/**
-	 * transfer data to Uint8Array
-	 * @param buf
-	 */
-	protected constraintPushData_(buf: ArrayBuffer | Uint8Array): Uint8Array | null {
-		let newBuf = null;
-		if (!isArrayBuffer(buf) && !isUint8Array(buf)) {
-			return newBuf;
-		}
+    /**
+     * transfer data to Uint8Array
+     * @param buf
+     */
+    protected constraintPushData_(buf: ArrayBuffer | Uint8Array): Uint8Array | null {
+        let newBuf = null;
+        if (!isArrayBuffer(buf) && !isUint8Array(buf)) {
+            return newBuf;
+        }
 
-		if (isArrayBuffer(buf)) {
-			newBuf = new Uint8Array(buf);
-		}
+        if (isArrayBuffer(buf)) {
+            newBuf = new Uint8Array(buf);
+        }
 
-		return newBuf;
-	}
+        return newBuf;
+    }
 
-	reset(): void {}
+    reset(): void {}
 
-	destroy(): void {
-		this.unpipe();
-		this.endStream.unpipe();
+    destroy(): void {
+        this.unpipe();
+        this.endStream.unpipe();
 
-		this.eventManager_.removeAll();
-	}
+        this.eventManager_.removeAll();
+    }
 }

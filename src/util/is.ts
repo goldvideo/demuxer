@@ -32,42 +32,42 @@ var objectToString = Object.prototype.toString;
  * // => false
  */
 export function isObjectLike(value: any): boolean {
-	return !!value && typeof value == 'object';
+    return !!value && typeof value == 'object';
 }
 
 export function isEmptyObject(obj: object): boolean {
-	for (var prop in obj) {
-		if (obj.hasOwnProperty(prop)) {
-			return false;
-		}
-	}
-	return JSON.stringify(obj) === JSON.stringify({});
+    for (var prop in obj) {
+        if (obj.hasOwnProperty(prop)) {
+            return false;
+        }
+    }
+    return JSON.stringify(obj) === JSON.stringify({});
 }
 
 /**
  * @param url
  */
 export function isHttps(url?: string): boolean {
-	return /^https/gi.test(url || window.location.protocol);
+    return /^https/gi.test(url || window.location.protocol);
 }
 
 /**
  * @param num
  */
 export function isNumber(num: any): boolean {
-	return typeof num === 'number' && !isNaN(num);
+    return typeof num === 'number' && !isNaN(num);
 }
 
 /**
  * @param value
  */
 export function isArrayBuffer(value: any): boolean {
-	return isObjectLike(value) && objectToString.call(value).toLowerCase() === '[object arraybuffer]';
+    return isObjectLike(value) && objectToString.call(value).toLowerCase() === '[object arraybuffer]';
 }
 
 /**
  * @param value
  */
 export function isUint8Array(value: any): boolean {
-	return isObjectLike(value) && objectToString.call(value).toLowerCase() === '[object uint8array]';
+    return isObjectLike(value) && objectToString.call(value).toLowerCase() === '[object uint8array]';
 }

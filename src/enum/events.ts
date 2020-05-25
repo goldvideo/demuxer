@@ -5,9 +5,9 @@
  */
 
 export enum Events {
-	ERROR = 'ERROR',
-	INFO = 'INFO',
-	DATA = 'DATA',
-	DEMUX_DATA = 'DEMUX_DATA',
-	DONE = 'DONE'
+    ERROR = 'ERROR',
+    INFO = 'INFO',
+    DATA = 'DATA',
+    DEMUX_DATA = 'DEMUX_DATA',
+    DONE = 'DONE'
 }

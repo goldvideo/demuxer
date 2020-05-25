@@ -9,37 +9,37 @@ import NALU from '../codec/avc/nalu';
 // }
 
 export interface AVCFrame extends Array<NALU> {
-	keyframe?: boolean;
-	duration?: number;
-	dts?: number;
-	pts?: number;
-	byteLength?: number;
-	naluCount?: number;
+    keyframe?: boolean;
+    duration?: number;
+    dts?: number;
+    pts?: number;
+    byteLength?: number;
+    naluCount?: number;
 }
 
 export interface GOP extends Array<AVCFrame> {
-	trackId?: number;
-	duration?: number;
-	byteLength?: number;
-	naluCount?: number;
+    trackId?: number;
+    duration?: number;
+    byteLength?: number;
+    naluCount?: number;
 }
 
 export interface GOPVector extends Array<GOP> {
-	type?: string;
-	trackId?: number;
-	duration?: number;
-	byteLength?: number;
-	naluCount?: number;
-	frameLength?: number;
-	firstDTS?: number;
-	firstPTS?: number;
+    type?: string;
+    trackId?: number;
+    duration?: number;
+    byteLength?: number;
+    naluCount?: number;
+    frameLength?: number;
+    firstDTS?: number;
+    firstPTS?: number;
 }
 
 export interface AACFrameList extends Array<AACFrame> {
-	type?: string;
-	trackId?: number;
-	byteLength?: number;
-	firstDTS?: number;
-	firstPTS?: number;
-	duration?: number;
+    type?: string;
+    trackId?: number;
+    byteLength?: number;
+    firstDTS?: number;
+    firstPTS?: number;
+    duration?: number;
 }

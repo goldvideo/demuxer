@@ -10,25 +10,25 @@ import Stream from '../../util/stream';
 import { FLVParseStage } from '../flv-const';
 
 export enum AudioSoundFormat {
-	AAC = 10
+    AAC = 10
 }
 
 export enum AudioSoundType {
-	MONO = 0,
-	STEREO = 1 // For AAC: always 1
+    MONO = 0,
+    STEREO = 1 // For AAC: always 1
 }
 
 export default class AVContext extends Stream {
-	stage: FLVParseStage;
-	pos: number = 0; // parse byte position relative to flv first byte;
+    stage: FLVParseStage;
+    pos: number = 0; // parse byte position relative to flv first byte;
 
-	version: number;
-	hasAudio: boolean;
-	hasVideo: boolean;
+    version: number;
+    hasAudio: boolean;
+    hasVideo: boolean;
 
-	keyframeTimes: number[];
-	keyframeFilePositions: number[];
+    keyframeTimes: number[];
+    keyframeFilePositions: number[];
 
-	decoderConfigurationRecord: AVCDecoderConfigurationRecord;
-	audioSpecificConfig: AudioSpecificConfig;
+    decoderConfigurationRecord: AVCDecoderConfigurationRecord;
+    audioSpecificConfig: AudioSpecificConfig;
 }

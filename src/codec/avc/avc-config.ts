@@ -12,21 +12,21 @@ import { PPSProps } from './pps';
  * Accord sps/pps, generate mimeType info.
  */
 export default (sps: SPSProps, pps?: PPSProps) => {
-	let profile_idc = sps.profile_idc;
-	let profile_compatibility = sps.profile_compatibility;
-	let level_idc = sps.level_idc;
-	let codecString = 'avc1.';
+    let profile_idc = sps.profile_idc;
+    let profile_compatibility = sps.profile_compatibility;
+    let level_idc = sps.level_idc;
+    let codecString = 'avc1.';
 
-	let arr = [profile_idc, profile_compatibility, level_idc];
-	for (let j = 0; j < arr.length; j++) {
-		let h = arr[j].toString(16);
-		if (h.length < 2) {
-			h = '0' + h;
-		}
-		codecString += h;
-	}
+    let arr = [profile_idc, profile_compatibility, level_idc];
+    for (let j = 0; j < arr.length; j++) {
+        let h = arr[j].toString(16);
+        if (h.length < 2) {
+            h = '0' + h;
+        }
+        codecString += h;
+    }
 
-	return {
-		codec: codecString
-	};
+    return {
+        codec: codecString
+    };
 };

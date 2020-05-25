@@ -18,23 +18,23 @@
  * @private
  */
 export function readBit(buffer: Uint8Array, bitOffset: number = 0, length: number = 1): number {
-	let startByte = 0;
-	let startByteBitPos = 0;
-	let val = 0;
-	let bitStr = '',
-		bitVal = 0;
+    let startByte = 0;
+    let startByteBitPos = 0;
+    let val = 0;
+    let bitStr = '',
+        bitVal = 0;
 
-	for (let j = bitOffset; j < bitOffset + length; j++) {
-		startByte = Math.floor(j / 8);
-		startByteBitPos = 7 - (j % 8);
-		bitVal = (buffer[startByte] >> startByteBitPos) & 0x01;
+    for (let j = bitOffset; j < bitOffset + length; j++) {
+        startByte = Math.floor(j / 8);
+        startByteBitPos = 7 - (j % 8);
+        bitVal = (buffer[startByte] >> startByteBitPos) & 0x01;
 
-		bitStr += bitVal;
-	}
+        bitStr += bitVal;
+    }
 
-	val = parseInt(bitStr, 2);
+    val = parseInt(bitStr, 2);
 
-	return val;
+    return val;
 }
 
 /**
@@ -43,7 +43,7 @@ export function readBit(buffer: Uint8Array, bitOffset: number = 0, length: numbe
  * @param bitOffset
  */
 export function readByte(buffer: Uint8Array, bitOffset: number = 0) {
-	return readBit(buffer, bitOffset, 8);
+    return readBit(buffer, bitOffset, 8);
 }
 
 /**
@@ -52,47 +52,47 @@ export function readByte(buffer: Uint8Array, bitOffset: number = 0) {
  * @param bitOffset
  */
 export function readUEV(buffer: Uint8Array, bitOffset: number = 0) {
-	let leadingZeros = [];
-	let bitLength = buffer.byteLength * 8;
-	let readBit1 = false;
-	let startByte = 0;
-	let startByteBitPos = 0;
-	let bitVal = 0;
-	let value = '';
+    let leadingZeros = [];
+    let bitLength = buffer.byteLength * 8;
+    let readBit1 = false;
+    let startByte = 0;
+    let startByteBitPos = 0;
+    let bitVal = 0;
+    let value = '';
 
-	// 1. 计算 leadingZeros
-	for (let i = bitOffset; i < bitLength; i++) {
-		startByte = Math.floor(i / 8);
-		startByteBitPos = 7 - (i % 8);
+    // 1. 计算 leadingZeros
+    for (let i = bitOffset; i < bitLength; i++) {
+        startByte = Math.floor(i / 8);
+        startByteBitPos = 7 - (i % 8);
 
-		bitVal = (buffer[startByte] >> startByteBitPos) & 0x01;
+        bitVal = (buffer[startByte] >> startByteBitPos) & 0x01;
 
-		if (!readBit1) {
-			if (bitVal === 0) {
-				leadingZeros.push(0);
-			} else {
-				readBit1 = true;
-				bitOffset = i;
-				break;
-			}
-		}
-	}
+        if (!readBit1) {
+            if (bitVal === 0) {
+                leadingZeros.push(0);
+            } else {
+                readBit1 = true;
+                bitOffset = i;
+                break;
+            }
+        }
+    }
 
-	let codeNumLength = leadingZeros.length + 1;
+    let codeNumLength = leadingZeros.length + 1;
 
-	// 2. 计算有效位数值
-	for (let j = bitOffset; j < bitOffset + codeNumLength; j++) {
-		startByte = Math.floor(j / 8);
-		startByteBitPos = 7 - (j % 8);
-		bitVal = (buffer[startByte] >> startByteBitPos) & 0x01;
+    // 2. 计算有效位数值
+    for (let j = bitOffset; j < bitOffset + codeNumLength; j++) {
+        startByte = Math.floor(j / 8);
+        startByteBitPos = 7 - (j % 8);
+        bitVal = (buffer[startByte] >> startByteBitPos) & 0x01;
 
-		value += bitVal;
-	}
+        value += bitVal;
+    }
 
-	return {
-		bitLength: leadingZeros.length + codeNumLength,
-		value: parseInt(value, 2) - 1
-	};
+    return {
+        bitLength: leadingZeros.length + codeNumLength,
+        value: parseInt(value, 2) - 1
+    };
 }
 
 /**
@@ -101,20 +101,20 @@ export function readUEV(buffer: Uint8Array, bitOffset: number = 0) {
  * @param bitOffset
  */
 export function readSEV(buffer: Uint8Array, bitOffset: number = 0) {
-	let uev = readUEV(buffer, bitOffset);
-	let codeNum = uev.value;
+    let uev = readUEV(buffer, bitOffset);
+    let codeNum = uev.value;
 
-	let signedValue = Math.pow(-1, codeNum + 1) * Math.ceil(codeNum / 2);
+    let signedValue = Math.pow(-1, codeNum + 1) * Math.ceil(codeNum / 2);
 
-	return {
-		bitLength: uev.bitLength,
-		value: signedValue
-	};
+    return {
+        bitLength: uev.bitLength,
+        value: signedValue
+    };
 }
 
 export default {
-	readUEV,
-	readSEV,
-	readBit,
-	readByte
+    readUEV,
+    readSEV,
+    readBit,
+    readByte
 };
