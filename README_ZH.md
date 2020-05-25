@@ -36,7 +36,7 @@
     // const demux = new MP4Demux();
 
     // 数据是按照流式方式吐出，尽快吐出解析出来第一个数据
-    demux.on(Demuxer.Events.DEMUX_DATA, (e) => {
+    demux.on(Events.DEMUX_DATA, (e) => {
     	console.log(e);
 
     	// if (e.stream_type === 15) {
@@ -47,7 +47,7 @@
 
 
     // 当push进来的数据都解析并吐出后，会产生如下事件。用来告诉使用者数据已经解析完毕
-    demux.on(Demuxer.Events.DONE, (e) => {
+    demux.on(Events.DONE, (e) => {
         // 数据消耗完毕之后，管道进行了flush动作
     });
 
