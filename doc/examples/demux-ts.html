@@ -29,7 +29,7 @@
         fetch(tsUrl).then((res) => {
             res.arrayBuffer().then((bytes) => {
                 let demux = new Demuxer.TSDemux({
-                    debug: true
+                    debug: true // if env is production, debug should be false or not specified.
                 });
 
                 demux.on(Demuxer.Events.DEMUX_DATA, (e) => {

@@ -13,23 +13,40 @@ digraph demux {
     DEMUX [label = "DEMUX" shape = cylinder]
     MP4_DEMUX [shape = rectangle]
     TS_DEMUX [shape = rectangle]
+    FLV_DEMUX [shape = rectangle]
 
+    ## TS
     PesStream   [shape = component]
     ElementaryStream  [shape = component]
     ComplexStream  [shape = component]
+
+    ## MP4
     Mp4Inspector  [shape = trapezium]
+
+    ## FLV
+    BodyStream  [shape = component]
+    TagStream  [shape = component]
+
+
+    // AVCCodec [shape = component]
+    // ADTSCodec [shape = component]
 
     ####################################################################################################
     DEMUX -> MP4_DEMUX [label = "ArrayBuffer => JSON" dir = both arrowtail = onormal]
     DEMUX -> TS_DEMUX [label = "ArrayBuffer"]
+    DEMUX -> FLV_DEMUX [label = "ArrayBuffer"]
 
-    MP4_DEMUX -> Mp4Inspector [label = "ArrayBuffer => JSON" dir = both arrowtail = onormal]
-
+    ## TS
     TS_DEMUX -> PesStream [label = "packet_data"]
     PesStream -> ElementaryStream [label = "elementary_data"]
     ElementaryStream -> ComplexStream [label = "complex_data"]
 
+    ## MP4
+    MP4_DEMUX -> Mp4Inspector [label = "ArrayBuffer => JSON" dir = both arrowtail = onormal]
 
+    ## FLV
+    FLV_DEMUX -> BodyStream [label = "ArrayBuffer"]
+    BodyStream -> TagStream [label = "FlvTag"]
 
     subgraph cluster_legend {
         style = rounded

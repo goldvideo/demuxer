@@ -28,19 +28,36 @@
 
         fetch(tsUrl).then((res) => {
             res.arrayBuffer().then((bytes) => {
-                let demux = new Demuxer.FLVDemux('mp4', {
-                    debug: true
+                let demux = new Demuxer.FLVDemux({
+                    debug: true // if env is production, debug should be false or not specified.
+                    // decodeCodec: true // if you want to decode H264 or aac
                 });
 
                 demux.on(Demuxer.Events.DEMUX_DATA, (e) => {
                     console.log(e)
-                });
 
-                demux.on(Demuxer.Events.DONE, (e) => {
+                    switch (e.type) {
+                        case 'head':
+
+                            break;
+                        case 'tag':
+                            // // get audio info
+
+                            // get onMetaData info
+
+                            // case FlvDemux.VideoTag.TYPE:
+                            //     // get video info
+                            //     break;
+                            break;
+                    }
+                }).on(Demuxer.Events.DONE, (e) => {
                     // consumed & flushed all pipe buffer.
+                }).on(Demuxer.Events.ERROR, (e) => {
+                    // encounter some unexpected error.
                 });
 
                 // buffer -> video bytes ArrayBuffer 
+                // If bytes is not continuous, it should be start with tag.
                 demux.push(bytes);
             });
         })
