@@ -1,6 +1,6 @@
 {
   "name": "demuxer",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "A utility for transmux ts/mp4/flv",
   "main": "dist/demuxer.all.cjs.js",
   "module": "dist/demuxer.all.esm.js",
@@ -56,6 +56,7 @@
   "keywords": [
     "demux",
     "typescript",
+    "streaming data",
     "mpegts",
     "ts",
     "mp4",
