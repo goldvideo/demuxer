@@ -6,13 +6,6 @@ import typescript from 'typescript';
 const { BUILD_MODE } = process.env;
 
 const getPlugins = function () {
-	// const nodePlugins = [
-	// 	resolvePlugin(),
-	// 	cjsPlugin({
-	// 		transformMixedEsModules: true
-	// 	})
-	// ];
-
 	const plugins = [
 		typescriptPlugin({
 			tsconfig: path.resolve(__dirname, 'tsconfig.json'),
