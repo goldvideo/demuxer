@@ -21,18 +21,27 @@
         }
     </style>
 
-    <script type="text/javascript" src="../../dist/demuxer.ts.umd.js"></script>
+    <!-- browser import -->
+    <!-- <script type="text/javascript" src="../../dist/demuxer.ts.umd.js"></script>
+    <script>
+        const TSDemux = Demuxer.TSDemux;
+        const Events = Demuxer.Events;
+    </script> 
+    -->
 
-    <script type="text/javascript">
+    <script type="module">
+        // ES Module import
+        import { TSDemux, Events } from '../../dist/demuxer.ts.esm.js';
+        // import { TSDemux, Events } from '../../dist/demuxer.all.esm.js';
         let tsUrl = './h265_aac_1_16000.ts';
 
         fetch(tsUrl).then((res) => {
             res.arrayBuffer().then((bytes) => {
-                let demux = new Demuxer.TSDemux({
+                let demux = new TSDemux({
                     debug: true // if env is production, debug should be false or not specified.
                 });
 
-                demux.on(Demuxer.Events.DEMUX_DATA, (e) => {
+                demux.on(Events.DEMUX_DATA, (e) => {
                     console.log(e)
 
                     // if (e.stream_type === 15) {
@@ -40,7 +49,7 @@
                     // }
                 });
 
-                demux.on(Demuxer.Events.DONE, (e) => {
+                demux.on(Events.DONE, (e) => {
                     // consumed & flushed all pipe buffer.
                 });
 

@@ -21,19 +21,29 @@
         }
     </style>
 
-    <script type="text/javascript" src="../../dist/demuxer.flv.umd.js"></script>
 
-    <script type="text/javascript">
+    <!-- browser import -->
+    <!-- <script type="text/javascript" src="../../dist/demuxer.all.umd.js"></script>
+    <script>
+        const FLVDemux = Demuxer.FLVDemux;
+        const Events = Demuxer.Events;
+    </script> -->
+
+    <script type="module">
+        // ES Module import
+        import { FLVDemux, Events } from '../../dist/demuxer.flv.esm.js';
+        // import { FLVDemux, Events } from '../../dist/demuxer.all.esm.js';
+
         let tsUrl = './h264_aac_1_11025.flv';
 
         fetch(tsUrl).then((res) => {
             res.arrayBuffer().then((bytes) => {
-                let demux = new Demuxer.FLVDemux({
+                let demux = new FLVDemux({
                     debug: true // if env is production, debug should be false or not specified.
                     // decodeCodec: true // if you want to decode H264 or aac
                 });
 
-                demux.on(Demuxer.Events.DEMUX_DATA, (e) => {
+                demux.on(Events.DEMUX_DATA, (e) => {
                     console.log(e)
 
                     switch (e.type) {
@@ -50,9 +60,9 @@
                             //     break;
                             break;
                     }
-                }).on(Demuxer.Events.DONE, (e) => {
+                }).on(Events.DONE, (e) => {
                     // consumed & flushed all pipe buffer.
-                }).on(Demuxer.Events.ERROR, (e) => {
+                }).on(Events.ERROR, (e) => {
                     // encounter some unexpected error.
                 });
 

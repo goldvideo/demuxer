@@ -4190,6 +4190,768 @@
 	    }
 	}
 
+	/**
+	 * @file: created at Wednesday, 13th May 2020 4:15:40 pm
+	 * @copyright Copyright (c) 2020
+	 * @author gem <gems.xu@gmail.com>
+	 */
+	const HEAD_LEN = 9;
+	const MIN_BODY_LEN = 4;
+	const PREVIOUS_TAG_SIZE = 4;
+	const MIN_TAG_LEN = PREVIOUS_TAG_SIZE;
+	var FLVParseStage;
+	(function (FLVParseStage) {
+	    FLVParseStage[FLVParseStage["HEAD"] = 0] = "HEAD";
+	    FLVParseStage[FLVParseStage["BODY"] = 1] = "BODY";
+	})(FLVParseStage || (FLVParseStage = {}));
+
+	/**
+	 * @file: created at Saturday, 23rd May 2020 11:46:18 pm
+	 * @copyright Copyright (c) 2020
+	 * @author gem <gems.xu@gmail.com>
+	 */
+	var FlvTagTypes;
+	(function (FlvTagTypes) {
+	    FlvTagTypes[FlvTagTypes["SCRIPT_DATA"] = 18] = "SCRIPT_DATA";
+	    FlvTagTypes[FlvTagTypes["VIDEO"] = 9] = "VIDEO";
+	    FlvTagTypes[FlvTagTypes["AUDIO"] = 8] = "AUDIO";
+	})(FlvTagTypes || (FlvTagTypes = {}));
+	var FlvTagTypes$1 = FlvTagTypes;
+
+	/**
+	 * @file: tag.js, created at Monday, 23rd December 2019 3:47:23 pm
+	 * @copyright Copyright (c) 2020
+	 * @author gem <gems.xu@gmail.com>
+	 */
+	/**
+	 * @extends DataViewReader
+	 */
+	class FlvTag extends DataViewReader {
+	    /**
+	     * @param buffer
+	     */
+	    constructor(buffer) {
+	        super();
+	        this.tagType = buffer[0];
+	        this.dataSize = this.readUint32(buffer, 0) & 0x00ffffff;
+	        let timestamp = this.readUint32(buffer, 3) & 0x00ffffff; // the lower 24 bits of the timestamp
+	        let timestampExtended = buffer[7]; // This field represents the upper 8 bits of timestamp
+	        this.timestamp = (timestampExtended << 24) + timestamp;
+	        this.streamId = this.readUint32(buffer, 8) & 0x00ffffff; // Always 0
+	        this.payload = buffer.subarray(11, 11 + this.dataSize);
+	        this.previousTagSize = this.readUint32(buffer, 11 + this.dataSize);
+	        this.totalSize = this.previousTagSize + 4;
+	    }
+	    valid() {
+	        let { tagType, dataSize, previousTagSize } = this;
+	        return (previousTagSize === 11 + dataSize &&
+	            (tagType === FlvTagTypes$1.SCRIPT_DATA || tagType === FlvTagTypes$1.VIDEO || tagType === FlvTagTypes$1.AUDIO));
+	    }
+	}
+
+	/**
+	 * @file: elementary.js, created at Monday, 23rd December 2019 3:47:23 pm
+	 * @copyright Copyright (c) 2020
+	 * @author gem <gems.xu@gmail.com>
+	 */
+	class BodyStream extends Stream {
+	    constructor(ctx, flvCtx, options = {}) {
+	        super();
+	        this.ctx_ = ctx;
+	        this.flv_ = flvCtx;
+	        this.options_ = options;
+	        this.cache_buffer_ = new CacheBuffer();
+	    }
+	    /**
+	     * Push a body buffer
+	     */
+	    push(bodyBuffer) {
+	        const { ctx_, flv_, cache_buffer_ } = this;
+	        let buffer;
+	        cache_buffer_.append(bodyBuffer);
+	        if (flv_.pos === HEAD_LEN) {
+	            if (cache_buffer_.byteLength > PREVIOUS_TAG_SIZE + MIN_TAG_LEN) {
+	                // drop PreviousTagSize0
+	                cache_buffer_.cut(PREVIOUS_TAG_SIZE);
+	                flv_.pos += PREVIOUS_TAG_SIZE;
+	            }
+	        }
+	        while (cache_buffer_.byteLength > 0) {
+	            // buffer start with tag
+	            buffer = cache_buffer_.bytes;
+	            if (buffer.length >= MIN_TAG_LEN) {
+	                let tagHeadSize = 11; // 10 is tag header
+	                let tagPayloadSize = (buffer[1] << 16) + (buffer[2] << 8) + buffer[3];
+	                let previousTagSize = 4;
+	                let tagSize = tagHeadSize + tagPayloadSize + previousTagSize;
+	                if (buffer.length >= tagSize) {
+	                    let tagBuffer = cache_buffer_.cut(tagSize);
+	                    let tag = new FlvTag(tagBuffer);
+	                    if (tag.valid()) {
+	                        this.emit('data', tag);
+	                        flv_.pos += tag.totalSize;
+	                    }
+	                    else {
+	                        let errMsg = `Encounter invalid flv tag, tag_length(${tag.previousTagSize}), cache_length(${cache_buffer_.byteLength}), data(${tagBuffer})`;
+	                        logger.error(errMsg);
+	                        this.reset();
+	                        ctx_.emit('error', muxErrorCode.TS_SYNC_BYTE, errMsg);
+	                    }
+	                }
+	                else {
+	                    break;
+	                }
+	            }
+	            else {
+	                break;
+	            }
+	        }
+	    }
+	    reset() {
+	        const { cache_buffer_ } = this;
+	        cache_buffer_.clear();
+	        this.emit('reset');
+	    }
+	}
+
+	/**
+	 * @file: created at Sunday, 24th May 2020 2:21:46 am
+	 * @copyright Copyright (c) 2020
+	 * @author gem <gems.xu@gmail.com>
+	 */
+	function AMFdeSerialize(data) {
+	    let result = {};
+	    let item = parseData_(data);
+	    result[item.key] = item.value;
+	    return result;
+	}
+	function parseData_(source, isString = false) {
+	    let key = null, value = null, data = null;
+	    if (isString) {
+	        try {
+	            data = new Uint8Array(source.length + 1);
+	        }
+	        catch (e) {
+	            logger.error(`flv parseData failed: ${e.message}`);
+	        }
+	        data[0] = 2;
+	        data.set(source, 1, source.length);
+	    }
+	    else {
+	        data = source;
+	    }
+	    key = deSerialize_(data);
+	    if (isString) {
+	        key.valueLength -= 1;
+	    }
+	    let temp = source.subarray(key.valueLength, source.byteLength);
+	    value = deSerialize_(temp);
+	    return {
+	        key: key.value,
+	        value: value.value,
+	        valueLength: key.valueLength + value.valueLength
+	    };
+	}
+	function deSerialize_(data) {
+	    let result = {};
+	    let valueLength = 0;
+	    let a = new DataViewReader();
+	    switch (data[0]) {
+	        case 0:
+	            valueLength = 8;
+	            result.value = uint8ToDouble_(data.subarray(1, 9));
+	            result.valueLength = 1 + valueLength;
+	            break;
+	        case 1:
+	            valueLength = 1;
+	            result.value = data[1] !== 0;
+	            result.valueLength = 1 + valueLength;
+	            break;
+	        case 2:
+	            valueLength = (data[1] << 8) | data[2];
+	            result.value = uint8ToStr_(data.subarray(3, 3 + valueLength));
+	            result.valueLength = 1 + 2 + valueLength;
+	            break;
+	        case 3:
+	            valueLength = 1;
+	            result.value = {};
+	            while (data[valueLength] != 0x00 || data[valueLength + 1] != 0x00 || data[valueLength + 2] != 0x09) {
+	                let objData = data.subarray(valueLength, data.byteLength);
+	                let item = parseData_(objData, true);
+	                result.value[item.key] = item.value;
+	                valueLength += item.valueLength;
+	                objData = null;
+	            }
+	            valueLength += 3;
+	            result.valueLength = valueLength;
+	            break;
+	        case 4:
+	            valueLength = (data[1] << 8) | data[2];
+	            result.value = uint8ToStr_(data.subarray(3, 3 + valueLength));
+	            result.valueLength = 1 + 2 + valueLength;
+	            break;
+	        case 5:
+	            result.value = null;
+	            valueLength = 1;
+	            result.valueLength = valueLength;
+	            break;
+	        case 6:
+	            result.value = undefined;
+	            valueLength = 1;
+	            result.valueLength = valueLength;
+	            break;
+	        case 7:
+	            result.value = a.readUint16(data, 1);
+	            valueLength = 2 + 1;
+	            result.valueLength = valueLength;
+	            break;
+	        case 8:
+	            {
+	                let arrLength = (data[1] << 24) | (data[2] << 16) | (data[3] << 8) | data[4];
+	                valueLength = 1 + 4;
+	                result.value = {};
+	                for (let count = 0; count < arrLength; count++) {
+	                    let itemData = data.subarray(valueLength, data.byteLength);
+	                    let item2 = parseData_(itemData, true);
+	                    result.value[item2.key] = item2.value;
+	                    valueLength += item2.valueLength;
+	                }
+	                valueLength += 3;
+	                result.valueLength = valueLength;
+	            }
+	            break;
+	        case 9:
+	            break;
+	        case 10:
+	            {
+	                let arr = [];
+	                let arrLength2 = a.readUint32(data, 1);
+	                for (let i = 0; i < arrLength2; i++) {
+	                    let objData2 = data.subarray(i * 9 + 4 + 1, data.byteLength);
+	                    arr.push(deSerialize_(objData2).value);
+	                }
+	                result.value = arr;
+	                valueLength = arr.length * 9 + 4 + 1;
+	                result.valueLength = valueLength;
+	            }
+	            break;
+	        case 11:
+	            result.value = uint8ToDouble_(data.subarray(0, 8));
+	            valueLength = 8 + 1 + 2;
+	            result.valueLength = valueLength;
+	            break;
+	        case 12:
+	            valueLength = (data[1] << 24) | (data[2] << 16) | (data[3] << 8) | data[4];
+	            result.value = uint8ToStr_(data.subarray(5, 5 + valueLength));
+	            result.valueLength = 1 + 4 + valueLength;
+	            break;
+	        default:
+	            return null;
+	    }
+	    a = null;
+	    return result;
+	}
+	function uint8ToStr_(data) {
+	    return String.fromCharCode.apply(null, data);
+	}
+	function uint8ToDouble_(data) {
+	    let temp = new Uint8Array(data);
+	    let dv = new DataView(temp.buffer);
+	    let str = dv.getFloat64(0);
+	    dv = null;
+	    temp = null;
+	    return str;
+	}
+
+	/**
+	 * @file: created at Saturday, 9th May 2020 4:38:35 pm
+	 * @copyright Copyright (c) 2020
+	 * @author gem <gems.xu@gmail.com>
+	 */
+	var AudioSoundFormat;
+	(function (AudioSoundFormat) {
+	    AudioSoundFormat[AudioSoundFormat["AAC"] = 10] = "AAC";
+	})(AudioSoundFormat || (AudioSoundFormat = {}));
+	var AudioSoundType;
+	(function (AudioSoundType) {
+	    AudioSoundType[AudioSoundType["MONO"] = 0] = "MONO";
+	    AudioSoundType[AudioSoundType["STEREO"] = 1] = "STEREO"; // For AAC: always 1
+	})(AudioSoundType || (AudioSoundType = {}));
+	class AVContext extends Stream {
+	    constructor() {
+	        super(...arguments);
+	        this.pos = 0; // parse byte position relative to flv first byte;
+	    }
+	}
+
+	/**
+	 * @file: created at Monday, 25th May 2020 12:36:52 am
+	 * @copyright Copyright (c) 2020
+	 * @author gem <gems.xu@gmail.com>
+	 */
+	// 0: AAC sequence header
+	// 1: AAC raw
+	var AACPacketType;
+	(function (AACPacketType) {
+	    AACPacketType[AACPacketType["SEQUENCE_HEAD"] = 0] = "SEQUENCE_HEAD";
+	    AACPacketType[AACPacketType["AAC_RAW"] = 1] = "AAC_RAW"; // 1 : One or more NALUs (Full frames are required)
+	})(AACPacketType || (AACPacketType = {}));
+	/**
+	 * ISO/IEC 14496-3 1.6.2.1 AudioSpecificConfig
+	 * @param buffer
+	 */
+	function parseAudioSpecificConfig(buffer) {
+	    let LOG = 'AudioSpecificConfig';
+	    // ISO/IEC 14496-3 Table 1.16 – Syntax of GetAudioObjectType()
+	    let audioObjectType = buffer[0] >> 3;
+	    if (audioObjectType == 31) {
+	        logger.error(`${LOG} unsupported audioObjectType`);
+	        // audioObjectType = 32 + audioObjectTypeExt;
+	    }
+	    let samplingFrequencyIndex = ((buffer[0] & 0x7) << 1) | (buffer[1] >> 7);
+	    if (samplingFrequencyIndex === 0xf) {
+	        logger.error(`${LOG} unsupported samplingFrequencyIndex`);
+	    }
+	    let channelConfiguration = (buffer[1] >> 3) & 0x0f;
+	    if (channelConfiguration < 0 || channelConfiguration >= 8) {
+	        logger.error('${LOG} unsupported channel configuration');
+	    }
+	    let sampleCount = ((buffer[1] >> 2) & 0x01) == 0 ? 1024 : 1024;
+	    let sampleRate = AAC_SAMPLING_FREQUENCIES[samplingFrequencyIndex];
+	    return {
+	        audioObjectType,
+	        samplingFrequencyIndex,
+	        channelConfiguration,
+	        sampleCount,
+	        sampleRate
+	    };
+	}
+	/**
+	 * @extends DataViewReader
+	 */
+	class AACAudioData extends DataViewReader {
+	    /**
+	     * @param buffer
+	     */
+	    constructor(buffer, timestamp) {
+	        super();
+	        this.dts = timestamp;
+	        this.pts = timestamp;
+	        this.aacPacketType = buffer[0];
+	        this.payload = buffer.subarray(1);
+	        if (this.aacPacketType === 0) {
+	            this.audioSpecificConfig = parseAudioSpecificConfig(this.payload);
+	        }
+	    }
+	}
+
+	/**
+	 * @file: created at Monday, 25th May 2020 2:51:52 am
+	 * @copyright Copyright (c) 2020
+	 * @author gem <gems.xu@gmail.com>
+	 */
+	// 0 = Linear PCM, platform endian
+	// 1 = ADPCM
+	// 2 = MP3
+	// 3 = Linear PCM, little endian
+	// 4 = Nellymoser 16-kHz mono
+	// 5 = Nellymoser 8-kHz mono
+	// 6 = Nellymoser
+	// 7 = G.711 A-law logarithmic PCM 8 = G.711 mu-law logarithmic PCM 9 = reserved
+	// 10 = AAC
+	// 11 = Speex
+	// 14 = MP3 8-Khz
+	// 15 = Device-specific sound
+	/**
+	 * @extends DataViewReader
+	 */
+	class FlvTagAudioData extends DataViewReader {
+	    /**
+	     * @param buffer
+	     */
+	    constructor(buffer, timestamp) {
+	        super();
+	        this.soundFormat = (buffer[0] & 0xf0) >> 4;
+	        this.soundRate = (buffer[0] & 0x0c) >> 2;
+	        let soundSize = (buffer[0] & 0x02) >> 1;
+	        switch (soundSize) {
+	            case 0:
+	                this.sampleSize = 8; // bit
+	                break;
+	            case 1:
+	                this.sampleSize = 16; // bit
+	                break;
+	        }
+	        this.soundType = buffer[0] & 1;
+	        switch (this.soundFormat) {
+	            case AudioSoundFormat.AAC:
+	                this.soundData = new AACAudioData(buffer.subarray(1), timestamp);
+	                break;
+	            default:
+	                logger.error(`flv tag audioData encounter unknown soundFormat ${this.soundFormat}`);
+	        }
+	    }
+	}
+
+	/**
+	 * @file: created at Monday, 25th May 2020 12:36:52 am
+	 * @copyright Copyright (c) 2020
+	 * @author gem <gems.xu@gmail.com>
+	 */
+	// 0 : AVCDecoderConfigurationRecord（AVC sequence header）
+	// 1 : One or more NALUs (Full frames are required)
+	// 2 : AVC end of sequence
+	var AVCPacketTypes;
+	(function (AVCPacketTypes) {
+	    AVCPacketTypes[AVCPacketTypes["SEQUENCE_HEAD"] = 0] = "SEQUENCE_HEAD";
+	    AVCPacketTypes[AVCPacketTypes["NALU"] = 1] = "NALU";
+	    AVCPacketTypes[AVCPacketTypes["SEQUENCE_END"] = 2] = "SEQUENCE_END"; // 2 : AVC end of sequence
+	})(AVCPacketTypes || (AVCPacketTypes = {}));
+	/**
+	 * ISO/IEC 14496-15  5.2.4.1.1 Syntax
+	 * @param data
+	 */
+	function parseAVCDecoderConfigurationRecord(data) {
+	    let version = data[0];
+	    let profile = data[1];
+	    let profileCompatibility = data[2];
+	    let level = data[3];
+	    let naluSizeLength = 1 + (data[4] & 0x03);
+	    let ppsNalus = [], spsNalus = [];
+	    let pos = 5;
+	    let numOfSPS = data[pos] & 0x1f;
+	    if (numOfSPS === 0) {
+	        logger.error(`Flv: Invalid AVCDecoderConfigurationRecord: No SPS`);
+	    }
+	    else if (numOfSPS > 0) {
+	        if (numOfSPS > 1) {
+	            logger.warn(`Flv: Strange AVCDecoderConfigurationRecord: SPS Count = ${numOfSPS}`);
+	        }
+	        pos++;
+	        for (let i = 0; i < numOfSPS; i++) {
+	            let spsDataLength = (data[pos] << 8) | data[pos + 1];
+	            pos += 2;
+	            spsNalus.push(data.subarray(pos, pos + spsDataLength));
+	            pos += spsDataLength;
+	        }
+	    }
+	    let numOfPPS = data[pos];
+	    if (numOfPPS === 0) {
+	        logger.error(`Flv: Invalid AVCDecoderConfigurationRecord: No PPS`);
+	    }
+	    else if (numOfPPS > 0) {
+	        if (numOfPPS > 1) {
+	            logger.warn(`Flv: Strange AVCDecoderConfigurationRecord: PPS Count = ${numOfPPS}`);
+	        }
+	        pos++;
+	        for (let i = 0; i < numOfPPS; i++) {
+	            let ppsDataLength = (data[pos] << 8) | data[pos + 1];
+	            pos += 2;
+	            ppsNalus.push(data.subarray(pos, pos + ppsDataLength));
+	            pos += ppsDataLength;
+	        }
+	    }
+	    return {
+	        version,
+	        profile,
+	        profileCompatibility,
+	        level,
+	        naluSizeLength,
+	        spsNalus,
+	        ppsNalus
+	    };
+	}
+	const avcCodec = new AVCCodec();
+	const naluList_ = [];
+	avcCodec.on('nalu', (nalu) => {
+	    naluList_.push(nalu);
+	});
+	/**
+	 * @extends DataViewReader
+	 */
+	class AVCVideoPacket extends DataViewReader {
+	    /**
+	     * @param buffer
+	     */
+	    constructor(pipeCtx, buffer, timestamp) {
+	        super();
+	        const { flv, options } = pipeCtx;
+	        this.avcPacketType = buffer[0];
+	        if (this.avcPacketType === 1) {
+	            let cts_uint32 = this.readUint32(buffer, 0) & 0x00ffffff;
+	            this.cts = (cts_uint32 << 8) >> 8; // convert to 24-bit signed int
+	        }
+	        else {
+	            this.cts = 0;
+	        }
+	        this.dts = timestamp;
+	        this.pts = this.dts + this.cts;
+	        this.payload = buffer.subarray(4);
+	        if (this.avcPacketType === 0) {
+	            this.decoderConfigurationRecord = parseAVCDecoderConfigurationRecord(this.payload);
+	            flv.decoderConfigurationRecord = this.decoderConfigurationRecord;
+	        }
+	        else {
+	            if (options.decodeCodec) {
+	                this.naluList = [];
+	                let raw = {
+	                    pts: this.pts,
+	                    dts: this.dts,
+	                    payload: this.payload
+	                };
+	                if (!this.decoderConfigurationRecord) {
+	                    if (flv.decoderConfigurationRecord) {
+	                        raw.naluSizeLength = flv.decoderConfigurationRecord.naluSizeLength;
+	                    }
+	                    avcCodec.push(raw);
+	                    // Clone nalu to videoData
+	                    for (let i = 0; i < naluList_.length; i++) {
+	                        this.naluList.push(naluList_[i]);
+	                    }
+	                    // empty cache
+	                    naluList_.splice(0, naluList_.length);
+	                }
+	            }
+	        }
+	    }
+	}
+
+	/**
+	 * @file: tag.js, created at Monday, 23rd December 2019 3:47:23 pm
+	 * @copyright Copyright (c) 2020
+	 * @author gem <gems.xu@gmail.com>
+	 */
+	// If CodecID == 2 H263VIDEOPACKET
+	// If CodecID == 3 SCREENVIDEOPACKET
+	// If CodecID == 4 VP6FLVVIDEOPACKET
+	// If CodecID == 5 VP6FLVALPHAVIDEOPACKET
+	// If CodecID == 6 SCREENV2VIDEOPACKET
+	// if CodecID == 7 AVCVIDEOPACKET
+	// Video frame payload or UI8 (see note following table)
+	var VideoCodecIDs;
+	(function (VideoCodecIDs) {
+	    VideoCodecIDs[VideoCodecIDs["AVC"] = 7] = "AVC"; // AVC_VIDEO_PACKET
+	})(VideoCodecIDs || (VideoCodecIDs = {}));
+	/**
+	 * @extends DataViewReader
+	 */
+	class FlvTagVideoData extends DataViewReader {
+	    /**
+	     * @param buffer
+	     */
+	    constructor(pipeCtx, buffer, timestamp) {
+	        super();
+	        this.frameType = (buffer[0] >> 4) & 0x0f;
+	        this.isKeyframe = this.frameType === 1;
+	        this.codecId = buffer[0] & 0x0f;
+	        switch (this.codecId) {
+	            case VideoCodecIDs.AVC:
+	                this.videoData = new AVCVideoPacket(pipeCtx, buffer.subarray(1), timestamp);
+	                break;
+	            default:
+	                logger.error(`flv tag videoData encounter unknown codecId ${this.codecId}`);
+	        }
+	    }
+	}
+
+	/**
+	 * @file: created at Saturday, 9th May 2020 3:49:22 pm
+	 * @copyright Copyright (c) 2020
+	 * @author gem <gems.xu@gmail.com>
+	 */
+	class TagsStream extends Stream {
+	    constructor(ctx, flv, options = {}) {
+	        super();
+	        this.flv_ = flv;
+	        this.options_ = options;
+	        this.pipeCtx = {
+	            ctx,
+	            flv,
+	            options
+	        };
+	    }
+	    push(tag) {
+	        switch (tag.tagType) {
+	            case FlvTagTypes$1.SCRIPT_DATA:
+	                this.parseScriptData_(tag.payload);
+	                break;
+	            case FlvTagTypes$1.VIDEO:
+	                this.parseVideoData_(tag);
+	                break;
+	            case FlvTagTypes$1.AUDIO:
+	                this.parseAudioData_(tag);
+	                break;
+	            default:
+	                logger.error(`still not supported flv tag type ${tag.tagType}`);
+	        }
+	    }
+	    flush() {
+	        const self = this;
+	        self.emit('done');
+	    }
+	    reset() {
+	        this.emit('reset');
+	    }
+	    parseScriptData_(buffer) {
+	        const { flv_ } = this;
+	        let result = AMFdeSerialize(buffer);
+	        flv_.emit('data', {
+	            type: 'tag',
+	            tagType: FlvTagTypes$1.SCRIPT_DATA,
+	            ...result
+	        });
+	    }
+	    parseVideoData_(tag) {
+	        const { flv_ } = this;
+	        const data = new FlvTagVideoData(this.pipeCtx, tag.payload, tag.timestamp);
+	        let ret = {
+	            type: 'tag',
+	            tagType: FlvTagTypes$1.VIDEO,
+	            timestamp: tag.timestamp,
+	            ...data
+	        };
+	        flv_.emit('data', ret);
+	    }
+	    parseAudioData_(tag) {
+	        const { options_, flv_ } = this;
+	        const data = new FlvTagAudioData(tag.payload, tag.timestamp);
+	        const { sampleSize, soundData } = data;
+	        if (soundData.audioSpecificConfig) {
+	            flv_.audioSpecificConfig = soundData.audioSpecificConfig;
+	        }
+	        let ret = {
+	            type: 'tag',
+	            tagType: FlvTagTypes$1.AUDIO,
+	            timestamp: tag.timestamp,
+	            ...data
+	        };
+	        flv_.emit('data', ret);
+	    }
+	}
+
+	/**
+	 * @file: created at Thursday, 14th May 2020 10:18:11 am
+	 * @copyright Copyright (c) 2020
+	 * @author gem <gems.xu@gmail.com>
+	 */
+	/**
+	 * @extends DataViewReader
+	 */
+	class FlvHead extends DataViewReader {
+	    /**
+	     * @param buffer
+	     */
+	    constructor(buffer) {
+	        super();
+	        this.signature =
+	            String.fromCharCode(buffer[0]) + // F
+	                String.fromCharCode(buffer[1]) + // L
+	                String.fromCharCode(buffer[2]); //V
+	        this.version = buffer[3];
+	        this.hasAudio = (buffer[4] & 4) >>> 2 == 1;
+	        this.hasVideo = (buffer[4] & 1) == 1;
+	        this.offset = this.readUint32(buffer, 5);
+	    }
+	    valid() {
+	        return this.signature === 'FLV';
+	    }
+	}
+
+	/**
+	 * flv demuxer.
+	 */
+	/**
+	 * flv
+	 */
+	class FLVDemux extends DemuxFacade {
+	    constructor(options = {}) {
+	        super(options);
+	        this.flv_ = new AVContext();
+	        this.flv_.stage = FLVParseStage.HEAD;
+	        // this. = 0;
+	        this.body_ = new BodyStream(this.ctx_, this.flv_, options);
+	        this.tags_ = new TagsStream(this.ctx_, this.flv_, options);
+	        // Compose pipeline
+	        this.pipe(this.body_);
+	        this.body_.pipe(this.tags_);
+	        super.listenEndStream_();
+	    }
+	    get endStream() {
+	        return this.flv_;
+	    }
+	    /**
+	     * @param buffer
+	     * @param conf
+	     * @param conf.offsetByte
+	     */
+	    push(buffer, conf = {}) {
+	        const { options_, ctx_, flv_, cache_buffer_ } = this;
+	        const data = super.constraintPushData_(buffer);
+	        let cacheByteLength = this.cache_buffer_.byteLength;
+	        logger.log(`flv demux received ${data.byteLength} bytes, cache ${cacheByteLength} bytes.`);
+	        options_.config = conf;
+	        if (isNumber(conf.offsetPos)) {
+	            if (cacheByteLength === 0) {
+	                if (flv_.pos !== conf.offsetPos) {
+	                    ctx_.emit('error', muxErrorCode.FLV_NOT_EXPECTED_ADJACENT_DATA);
+	                }
+	                flv_.pos = conf.offsetPos;
+	            }
+	        }
+	        cache_buffer_.append(data);
+	        // if file byteOffset is provided, then specify the stage of parser.
+	        if (flv_.pos < HEAD_LEN) {
+	            flv_.stage === FLVParseStage.HEAD;
+	        }
+	        else {
+	            flv_.stage === FLVParseStage.BODY;
+	        }
+	        while (true) {
+	            if (flv_.stage === FLVParseStage.HEAD) {
+	                if (cache_buffer_.byteLength >= HEAD_LEN) {
+	                    // has enough header
+	                    let chunk = cache_buffer_.cut(HEAD_LEN);
+	                    let head = new FlvHead(chunk);
+	                    if (head.valid()) {
+	                        flv_.emit('data', {
+	                            type: 'head',
+	                            signature: head.signature,
+	                            version: head.version,
+	                            hasAudio: head.hasAudio,
+	                            hasVideo: head.hasVideo,
+	                            offset: head.offset
+	                        });
+	                        // Change parse state -> body
+	                        flv_.stage = FLVParseStage.BODY;
+	                        flv_.pos = HEAD_LEN;
+	                    }
+	                    else {
+	                        ctx_.emit('error', muxErrorCode.FLV_HEAD_SIGNATURE);
+	                        break;
+	                    }
+	                }
+	                else {
+	                    break;
+	                }
+	            }
+	            else if (flv_.stage === FLVParseStage.BODY) {
+	                // At least has 4 body byte to parse
+	                if (cache_buffer_.byteLength >= MIN_BODY_LEN) {
+	                    let cbLen = cache_buffer_.byteLength;
+	                    let nextBytes = cache_buffer_.bytes;
+	                    cache_buffer_.clear();
+	                    if (nextBytes) {
+	                        this.emit('data', nextBytes);
+	                    }
+	                    flv_.pos += cbLen;
+	                }
+	                break;
+	            }
+	        }
+	    }
+	}
+
+	exports.FLVDemux = FLVDemux;
 	exports.MP4Demux = MP4Demux;
 	exports.TSDemux = TSDemux;
 

@@ -21,22 +21,31 @@
         }
     </style>
 
-    <script type="text/javascript" src="../../dist/demuxer.mp4.umd.js"></script>
+    <!-- browser import -->
+    <!-- <script type="text/javascript" src="../../dist/demuxer.all.umd.js"></script>
+        <script>
+            const MP4Demux = Demuxer.MP4Demux;
+            const Events = Demuxer.Events;
+        </script> -->
 
-    <script type="text/javascript">
+    <script type="module">
+        // ES Module import
+        import { MP4Demux, Events } from '../../dist/demuxer.mp4.esm.js';
+        // import { MP4Demux, Events } from '../../dist/demuxer.all.esm.js';
+
         let tsUrl = './hdr420_480_30s.fmp4';
 
         fetch(tsUrl).then((res) => {
             res.arrayBuffer().then((bytes) => {
-                let demux = new Demuxer.MP4Demux({
+                let demux = new MP4Demux({
                     debug: true // if env is production, debug should be false or not specified.
                 });
 
-                demux.on(Demuxer.Events.DEMUX_DATA, (e) => {
+                demux.on(Events.DEMUX_DATA, (e) => {
                     console.log(e)
                 });
 
-                demux.on(Demuxer.Events.DONE, (e) => {
+                demux.on(Events.DONE, (e) => {
                     // consumed & flushed all pipe buffer.
                 });
 
