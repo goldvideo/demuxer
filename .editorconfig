@@ -9,6 +9,8 @@ charset = utf-8
 end_of_line = lf
 insert_final_newline = false
 trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
 
 # Tab indentation (no size specified)
 [*.js]
