@@ -39,23 +39,23 @@
     // The data is spit out in a streaming manner,
     // and the first data is emitted as soon as possible.
     demux.on(Events.DEMUX_DATA, (e) => {
-    	console.log(e);
+        console.log(e);
 
-    	// if (e.stream_type === 15) {
-    	//     console.log(e)
-    	// }
+        // if (e.stream_type === 15) {
+        //     console.log(e)
+        // }
     });
 
     demux.on(Events.DONE, (e) => {
-    	// consumed & flushed all piped buffer.
+        // consumed & flushed all piped buffer.
     });
 
     // buffer -> video bytes ArrayBuffer
     demux.push(buffer, {
-    	// Support push part of the data for parsing
-    	// When done is set to true, if the data is decoded and there is no remaining data, the data is considered to have been pushed and Events.DONE will be emitted.
-    	// When done is set to false, Events.DONE will not be emit, waiting for subsequent data push
-    	done: true
+        // Support push part of the data for parsing
+        // When done is set to true, if the data is decoded and there is no remaining data, the data is considered to have been pushed and Events.DONE will be emitted.
+        // When done is set to false, Events.DONE will not be emit, waiting for subsequent data push
+        done: true
     });
     ```
 

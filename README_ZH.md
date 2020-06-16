@@ -37,11 +37,11 @@
 
     // 数据是按照流式方式吐出，尽快吐出解析出来第一个数据
     demux.on(Events.DEMUX_DATA, (e) => {
-    	console.log(e);
+        console.log(e);
 
-    	// if (e.stream_type === 15) {
-    	//     console.log(e)
-    	// }
+        // if (e.stream_type === 15) {
+        //     console.log(e)
+        // }
     });
     ```
 
