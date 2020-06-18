@@ -65,5 +65,6 @@
   "bugs": {
     "url": "https://github.com/goldvideo/demuxer/issues"
   },
-  "homepage": "https://github.com/goldvideo/demuxer#readme"
+  "homepage": "https://github.com/goldvideo/demuxer#readme",
+  "sideEffects": false
 }
