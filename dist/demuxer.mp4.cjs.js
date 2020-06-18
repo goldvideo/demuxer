@@ -1081,10 +1081,14 @@ class DemuxFacade extends Stream {
     constraintPushData_(buf) {
         let newBuf = null;
         if (!isArrayBuffer(buf) && !isUint8Array(buf)) {
+            logger.error(`Data pushed is not an ArrayBuffer or Uint8Array: ${buf}`);
             return newBuf;
         }
         if (isArrayBuffer(buf)) {
             newBuf = new Uint8Array(buf);
+        }
+        else {
+            newBuf = buf;
         }
         return newBuf;
     }

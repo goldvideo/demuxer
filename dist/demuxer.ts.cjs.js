@@ -1081,10 +1081,14 @@ class DemuxFacade extends Stream {
     constraintPushData_(buf) {
         let newBuf = null;
         if (!isArrayBuffer(buf) && !isUint8Array(buf)) {
+            logger.error(`Data pushed is not an ArrayBuffer or Uint8Array: ${buf}`);
             return newBuf;
         }
         if (isArrayBuffer(buf)) {
             newBuf = new Uint8Array(buf);
+        }
+        else {
+            newBuf = buf;
         }
         return newBuf;
     }
@@ -1642,108 +1646,108 @@ class PSI {
  */
 
 class M2TSComplexStream extends Stream {
-	constructor(ctx, psi) {
-		super();
+    constructor(ctx, psi) {
+        super();
 
-		/** @private */
-		this.context = ctx;
+        /** @private */
+        this.context = ctx;
 
-		/** @private {PSI} */
-		this.PSI = psi;
+        /** @private {PSI} */
+        this.PSI = psi;
 
-		/** @private {Object} */
-		this.videoTrack = null;
+        /** @private {Object} */
+        this.videoTrack = null;
 
-		/** @private {Object} */
-		this.audioTrack = null;
+        /** @private {Object} */
+        this.audioTrack = null;
 
-		/** @private {Object} */
-		this.captionTrack = null;
+        /** @private {Object} */
+        this.captionTrack = null;
 
-		// pipe specified by outside.
-	}
+        // pipe specified by outside.
+    }
 
-	push(data) {
-		let tracks = data;
+    push(data) {
+        let tracks = data;
 
-		for (let i = 0, track; i < tracks.length; i++) {
-			track = tracks[i];
+        for (let i = 0, track; i < tracks.length; i++) {
+            track = tracks[i];
 
-			switch (track.type) {
-				case 'video':
-					// data -> GOPs
-					this._complexVideo(track);
-					break;
-				case 'audio':
-					this._complexAudio(track);
-					break;
-				case 'caption':
-					this._complexCaption(track);
-					break;
-			}
-		}
-	}
+            switch (track.type) {
+                case 'video':
+                    // data -> GOPs
+                    this._complexVideo(track);
+                    break;
+                case 'audio':
+                    this._complexAudio(track);
+                    break;
+                case 'caption':
+                    this._complexCaption(track);
+                    break;
+            }
+        }
+    }
 
-	flush() {
-		this.emit('done');
+    flush() {
+        this.emit('done');
 
-		this._clearStream();
-	}
+        this._clearStream();
+    }
 
-	reset() {
-		this._clearStream();
+    reset() {
+        this._clearStream();
 
-		// This is demux end stream, so don't emit reset.
-		// this.emit('reset');
-	}
+        // This is demux end stream, so don't emit reset.
+        // this.emit('reset');
+    }
 
-	_clearStream() {
-		this.videoTrack = null;
-		this.audioTrack = null;
-		this.captionTrack = null;
-	}
+    _clearStream() {
+        this.videoTrack = null;
+        this.audioTrack = null;
+        this.captionTrack = null;
+    }
 
-	_complexVideo(gops) {
-		let track = this.PSI.findTrack(gops.trackId);
+    _complexVideo(gops) {
+        let track = this.PSI.findTrack(gops.trackId);
 
-		if (track) {
-			track.type = 'video';
-			track.gops = gops;
-			track.firstDTS = gops[0][0].dts;
-			track.firstPTS = gops[0][0].pts;
-			// set duration to Infinity(POSITIVE_INFINITY) can be useful for live.
-			// If Infinity it will loose the ability to seek.
-			track.duration = Number.POSITIVE_INFINITY;
+        if (track) {
+            track.type = 'video';
+            track.gops = gops;
+            track.firstDTS = gops[0][0].dts;
+            track.firstPTS = gops[0][0].pts;
+            // set duration to Infinity(POSITIVE_INFINITY) can be useful for live.
+            // If Infinity it will loose the ability to seek.
+            track.duration = Number.POSITIVE_INFINITY;
 
-			this.videoTrack = track;
+            this.videoTrack = track;
 
-			this.emit('data', {
-				videoTrack: this.videoTrack
-			});
-		}
-	}
+            this.emit('data', {
+                videoTrack: this.videoTrack
+            });
+        }
+    }
 
-	_complexAudio(frames) {
-		let track = this.PSI.findTrack(frames.trackId);
+    _complexAudio(frames) {
+        let track = this.PSI.findTrack(frames.trackId);
 
-		if (track) {
-			track.type = 'audio';
-			track.frames = frames;
-			track.firstPTS = track.firstDTS = frames[0].dts;
+        if (track) {
+            track.type = 'audio';
+            track.frames = frames;
+            track.firstPTS = track.firstDTS = frames[0].dts;
 
-			// set duration to Infinity(POSITIVE_INFINITY) can be useful for live.
-			// If Infinity it will loose the ability to seek.
-			track.duration = Number.POSITIVE_INFINITY;
+            // set duration to Infinity(POSITIVE_INFINITY) can be useful for live.
+            // If Infinity it will loose the ability to seek.
+            track.duration = Number.POSITIVE_INFINITY;
 
-			this.audioTrack = track;
+            this.audioTrack = track;
 
-			this.emit('data', {
-				audioTrack: this.audioTrack
-			});
-		}
-	}
+            this.emit('data', {
+                audioTrack: this.audioTrack
+            });
+        }
+    }
 
-	_complexCaption() {}
+    _complexCaption() {}
 }
 
 /**
