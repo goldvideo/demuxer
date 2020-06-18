@@ -28,7 +28,7 @@
 
 2. 使用
 
-    ```js
+    ```javascript
     import { TSDemux, FLVDemux, MP4Demux, Events } from 'demuxer';
 
     const demux = new TSDemux();
@@ -43,9 +43,7 @@
         //     console.log(e)
         // }
     });
-    ```
-
-
+    
     // 当push进来的数据都解析并吐出后，会产生如下事件。用来告诉使用者数据已经解析完毕
     demux.on(Events.DONE, (e) => {
         // 数据消耗完毕之后，管道进行了flush动作
