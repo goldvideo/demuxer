@@ -726,7 +726,7 @@ class MultiMap {
      * @param value
      */
     push(key, value) {
-        if (this.map_.hasOwnProperty(key)) {
+        if (Object.prototype.hasOwnProperty.call(this.map_, key)) {
             this.map_[key].push(value);
         }
         else {
@@ -944,49 +944,49 @@ class Logger extends EventEmitter {
     }
     log(...restArgs) {
         if (isWorker) {
-            logger.emit(this.MSG_NAME, 'log', [...arguments].join(''));
+            logger.emit(this.MSG_NAME, 'log', [...restArgs].join(''));
         }
         else {
             if (this._enable) {
-                console$1.log.call(console$1, prefix, ...arguments);
+                console$1.log.call(console$1, prefix, ...restArgs);
             }
         }
     }
     debug(...restArgs) {
         if (isWorker) {
-            logger.emit(this.MSG_NAME, 'debug', [...arguments].join(''));
+            logger.emit(this.MSG_NAME, 'debug', [...restArgs].join(''));
         }
         else {
             if (this._enable && console$1.debug) {
-                console$1.debug.call(console$1, prefix, ...arguments);
+                console$1.debug.call(console$1, prefix, ...restArgs);
             }
         }
     }
     assert(...restArgs) {
         if (this._enable && console$1.assert) {
-            let condition = arguments[0];
-            let sliceArgs = Array.prototype.slice.call(arguments, 1);
+            let condition = restArgs[0];
+            let sliceArgs = Array.prototype.slice.call(restArgs, 1);
             sliceArgs.unshift(prefix);
             console$1.assert.call(console$1, condition, ...sliceArgs);
         }
     }
     warn(...restArgs) {
         if (isWorker) {
-            logger.emit(this.MSG_NAME, 'warn', [...arguments].join(''));
+            logger.emit(this.MSG_NAME, 'warn', [...restArgs].join(''));
         }
         else {
             if (this._enable) {
-                console$1.warn.call(console$1, prefix, ...arguments);
+                console$1.warn.call(console$1, prefix, ...restArgs);
             }
         }
     }
     error(...restArgs) {
         if (isWorker) {
-            logger.emit(this.MSG_NAME, 'error', [...arguments].join(''));
+            logger.emit(this.MSG_NAME, 'error', [...restArgs].join(''));
         }
         else {
             if (this._enable) {
-                console$1.error.call(console$1, prefix, ...arguments);
+                console$1.error.call(console$1, prefix, ...restArgs);
             }
         }
     }
@@ -1775,9 +1775,12 @@ function decodeSPS(payload) {
     let profile_compatibility = payload[1];
     let level_idc = payload[2];
     let golombBuffer = payload.subarray(3);
-    let seq_scaling_matrix_present_flag = 0;
+    let //separate_colour_plane_flag = 0,
+    // qpprime_y_zero_transform_bypass_flag = 0,
+    seq_scaling_matrix_present_flag = 0;
     let lmpoclmUEV;
-    let ofnrpSEV, ofttbfSEV, nrfipoccUEV;
+    let //delta_pic_order_always_zero_flag = 0,
+    ofnrpSEV, ofttbfSEV, nrfipoccUEV;
     let pixelRatio = [1, 1], pixelScale = 1;
     let video_format;
     let fps = 0, num_units_in_tick, time_scale, fixed_frame_rate_flag = true;
@@ -2077,7 +2080,8 @@ function decodeSPS(payload) {
 function decodePPS(payload) {
     let bitOffset = 0;
     let golombBuffer = payload;
-    let slice_group_change_direction_flag = 0, sliceGroupIds = [];
+    let //slice_group_change_direction_flag = 0,
+    sliceGroupIds = [];
     let sgcdfUEV, picSizeUEV;
     let i = 0;
     // pic_parameter_set_id
@@ -2089,10 +2093,10 @@ function decodePPS(payload) {
     // entropy_coding_mode_flag
     // 0: Exp-Golomb coded, see subclause 9.1 or CAVLC, see subclause 9.2
     // 1: CABAC, see subclause 9.3
-    let entropy_coding_mode_flag = ExpGolomb.readBit(golombBuffer, bitOffset);
+    // let entropy_coding_mode_flag = ExpGolomb.readBit(golombBuffer, bitOffset);
     bitOffset += 1;
     // bottom_field_pic_order_in_frame_present_flag
-    let bottom_field_pic_order_in_frame_present_flag = ExpGolomb.readBit(golombBuffer, bitOffset);
+    // let bottom_field_pic_order_in_frame_present_flag = ExpGolomb.readBit(golombBuffer, bitOffset);
     bitOffset += 1;
     // num_slice_groups_minus1,
     let sliceGroupUEV = ExpGolomb.readUEV(golombBuffer, bitOffset);
@@ -2124,7 +2128,7 @@ function decodePPS(payload) {
             case 4:
             case 5:
                 // slice_group_change_direction_flag
-                slice_group_change_direction_flag = ExpGolomb.readBit(golombBuffer, bitOffset);
+                // slice_group_change_direction_flag = ExpGolomb.readBit(golombBuffer, bitOffset);
                 bitOffset += 1;
                 // slice_group_change_rate_minus1
                 sgcdfUEV = ExpGolomb.readUEV(golombBuffer, bitOffset);
@@ -2152,10 +2156,10 @@ function decodePPS(payload) {
     let nril1dcmUEV = ExpGolomb.readUEV(golombBuffer, bitOffset);
     bitOffset += nril1dcmUEV.bitLength;
     // weighted_pred_flag
-    let weighted_pred_flag = ExpGolomb.readBit(golombBuffer, bitOffset);
+    // let weighted_pred_flag = ExpGolomb.readBit(golombBuffer, bitOffset);
     bitOffset += 1;
     // weighted_bipred_idc
-    let weighted_bipred_idc = ExpGolomb.readBit(golombBuffer, bitOffset, 2);
+    // let weighted_bipred_idc = ExpGolomb.readBit(golombBuffer, bitOffset, 2);
     bitOffset += 1;
     // pic_init_qp_minus26
     let piqpSEV = ExpGolomb.readSEV(golombBuffer, bitOffset);
@@ -2166,11 +2170,11 @@ function decodePPS(payload) {
     // chroma_qp_index_offset
     let cqioSEV = ExpGolomb.readSEV(golombBuffer, bitOffset);
     bitOffset += cqioSEV.bitLength;
-    let deblocking_filter_control_present_flag = ExpGolomb.readBit(golombBuffer, bitOffset);
+    // let deblocking_filter_control_present_flag = ExpGolomb.readBit(golombBuffer, bitOffset);
     bitOffset += 1;
-    let constrained_intra_pred_flag = ExpGolomb.readBit(golombBuffer, bitOffset);
+    // let constrained_intra_pred_flag = ExpGolomb.readBit(golombBuffer, bitOffset);
     bitOffset += 1;
-    let redundant_pic_cnt_present_flag = ExpGolomb.readBit(golombBuffer, bitOffset);
+    // let redundant_pic_cnt_present_flag = ExpGolomb.readBit(golombBuffer, bitOffset);
     bitOffset += 1;
     // if( more_rbsp_data( ) ) {
     //     // Unused data...
@@ -2602,9 +2606,9 @@ class TagsStream extends Stream {
         flv_.emit('data', ret);
     }
     parseAudioData_(tag) {
-        const { options_, flv_ } = this;
+        const { /*options_,*/ flv_ } = this;
         const data = new FlvTagAudioData(tag.payload, tag.timestamp);
-        const { sampleSize, soundData } = data;
+        const { /*sampleSize,*/ soundData } = data;
         if (soundData.audioSpecificConfig) {
             flv_.audioSpecificConfig = soundData.audioSpecificConfig;
         }

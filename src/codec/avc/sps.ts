@@ -62,11 +62,11 @@ export function decodeSPS(payload: Uint8Array): SPSProps {
     let profile_compatibility = payload[1];
     let level_idc = payload[2];
     let golombBuffer = payload.subarray(3);
-    let separate_colour_plane_flag = 0,
-        qpprime_y_zero_transform_bypass_flag = 0,
+    let //separate_colour_plane_flag = 0,
+        // qpprime_y_zero_transform_bypass_flag = 0,
         seq_scaling_matrix_present_flag = 0;
     let lmpoclmUEV;
-    let delta_pic_order_always_zero_flag = 0,
+    let //delta_pic_order_always_zero_flag = 0,
         ofnrpSEV,
         ofttbfSEV,
         nrfipoccUEV;

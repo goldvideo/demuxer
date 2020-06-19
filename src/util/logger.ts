@@ -39,28 +39,28 @@ class Logger extends EventEmitter {
 
     log(...restArgs: any) {
         if (isWorker) {
-            logger.emit(this.MSG_NAME, 'log', [...arguments].join(''));
+            logger.emit(this.MSG_NAME, 'log', [...restArgs].join(''));
         } else {
             if (this._enable) {
-                console.log.call(console, prefix, ...arguments);
+                console.log.call(console, prefix, ...restArgs);
             }
         }
     }
 
     debug(...restArgs: any) {
         if (isWorker) {
-            logger.emit(this.MSG_NAME, 'debug', [...arguments].join(''));
+            logger.emit(this.MSG_NAME, 'debug', [...restArgs].join(''));
         } else {
             if (this._enable && console.debug) {
-                console.debug.call(console, prefix, ...arguments);
+                console.debug.call(console, prefix, ...restArgs);
             }
         }
     }
 
     assert(...restArgs: any) {
         if (this._enable && console.assert) {
-            let condition = arguments[0];
-            let sliceArgs = Array.prototype.slice.call(arguments, 1);
+            let condition = restArgs[0];
+            let sliceArgs = Array.prototype.slice.call(restArgs, 1);
             sliceArgs.unshift(prefix);
 
             console.assert.call(console, condition, ...sliceArgs);
@@ -69,20 +69,20 @@ class Logger extends EventEmitter {
 
     warn(...restArgs: any) {
         if (isWorker) {
-            logger.emit(this.MSG_NAME, 'warn', [...arguments].join(''));
+            logger.emit(this.MSG_NAME, 'warn', [...restArgs].join(''));
         } else {
             if (this._enable) {
-                console.warn.call(console, prefix, ...arguments);
+                console.warn.call(console, prefix, ...restArgs);
             }
         }
     }
 
     error(...restArgs: any) {
         if (isWorker) {
-            logger.emit(this.MSG_NAME, 'error', [...arguments].join(''));
+            logger.emit(this.MSG_NAME, 'error', [...restArgs].join(''));
         } else {
             if (this._enable) {
-                console.error.call(console, prefix, ...arguments);
+                console.error.call(console, prefix, ...restArgs);
             }
         }
     }

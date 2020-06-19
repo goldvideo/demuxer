@@ -728,7 +728,7 @@
          * @param value
          */
         push(key, value) {
-            if (this.map_.hasOwnProperty(key)) {
+            if (Object.prototype.hasOwnProperty.call(this.map_, key)) {
                 this.map_[key].push(value);
             }
             else {
@@ -946,49 +946,49 @@
         }
         log(...restArgs) {
             if (isWorker) {
-                logger.emit(this.MSG_NAME, 'log', [...arguments].join(''));
+                logger.emit(this.MSG_NAME, 'log', [...restArgs].join(''));
             }
             else {
                 if (this._enable) {
-                    console$1.log.call(console$1, prefix, ...arguments);
+                    console$1.log.call(console$1, prefix, ...restArgs);
                 }
             }
         }
         debug(...restArgs) {
             if (isWorker) {
-                logger.emit(this.MSG_NAME, 'debug', [...arguments].join(''));
+                logger.emit(this.MSG_NAME, 'debug', [...restArgs].join(''));
             }
             else {
                 if (this._enable && console$1.debug) {
-                    console$1.debug.call(console$1, prefix, ...arguments);
+                    console$1.debug.call(console$1, prefix, ...restArgs);
                 }
             }
         }
         assert(...restArgs) {
             if (this._enable && console$1.assert) {
-                let condition = arguments[0];
-                let sliceArgs = Array.prototype.slice.call(arguments, 1);
+                let condition = restArgs[0];
+                let sliceArgs = Array.prototype.slice.call(restArgs, 1);
                 sliceArgs.unshift(prefix);
                 console$1.assert.call(console$1, condition, ...sliceArgs);
             }
         }
         warn(...restArgs) {
             if (isWorker) {
-                logger.emit(this.MSG_NAME, 'warn', [...arguments].join(''));
+                logger.emit(this.MSG_NAME, 'warn', [...restArgs].join(''));
             }
             else {
                 if (this._enable) {
-                    console$1.warn.call(console$1, prefix, ...arguments);
+                    console$1.warn.call(console$1, prefix, ...restArgs);
                 }
             }
         }
         error(...restArgs) {
             if (isWorker) {
-                logger.emit(this.MSG_NAME, 'error', [...arguments].join(''));
+                logger.emit(this.MSG_NAME, 'error', [...restArgs].join(''));
             }
             else {
                 if (this._enable) {
-                    console$1.error.call(console$1, prefix, ...arguments);
+                    console$1.error.call(console$1, prefix, ...restArgs);
                 }
             }
         }

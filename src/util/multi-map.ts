@@ -19,7 +19,7 @@ export default class MultiMap {
      * @param value
      */
     push(key: string, value: any) {
-        if (this.map_.hasOwnProperty(key)) {
+        if (Object.prototype.hasOwnProperty.call(this.map_, key)) {
             this.map_[key].push(value);
         } else {
             this.map_[key] = [value];

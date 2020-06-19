@@ -18,7 +18,7 @@ export function decodePPS(payload: Uint8Array): PPSProps {
     let bitOffset = 0;
 
     let golombBuffer = payload;
-    let slice_group_change_direction_flag = 0,
+    let //slice_group_change_direction_flag = 0,
         sliceGroupIds = [];
     let sgcdfUEV, picSizeUEV;
     let i = 0;
@@ -34,11 +34,11 @@ export function decodePPS(payload: Uint8Array): PPSProps {
     // entropy_coding_mode_flag
     // 0: Exp-Golomb coded, see subclause 9.1 or CAVLC, see subclause 9.2
     // 1: CABAC, see subclause 9.3
-    let entropy_coding_mode_flag = ExpGolomb.readBit(golombBuffer, bitOffset);
+    // let entropy_coding_mode_flag = ExpGolomb.readBit(golombBuffer, bitOffset);
     bitOffset += 1;
 
     // bottom_field_pic_order_in_frame_present_flag
-    let bottom_field_pic_order_in_frame_present_flag = ExpGolomb.readBit(golombBuffer, bitOffset);
+    // let bottom_field_pic_order_in_frame_present_flag = ExpGolomb.readBit(golombBuffer, bitOffset);
     bitOffset += 1;
 
     // num_slice_groups_minus1,
@@ -75,7 +75,7 @@ export function decodePPS(payload: Uint8Array): PPSProps {
             case 4:
             case 5:
                 // slice_group_change_direction_flag
-                slice_group_change_direction_flag = ExpGolomb.readBit(golombBuffer, bitOffset);
+                // slice_group_change_direction_flag = ExpGolomb.readBit(golombBuffer, bitOffset);
                 bitOffset += 1;
                 // slice_group_change_rate_minus1
                 sgcdfUEV = ExpGolomb.readUEV(golombBuffer, bitOffset);
@@ -107,11 +107,11 @@ export function decodePPS(payload: Uint8Array): PPSProps {
     bitOffset += nril1dcmUEV.bitLength;
 
     // weighted_pred_flag
-    let weighted_pred_flag = ExpGolomb.readBit(golombBuffer, bitOffset);
+    // let weighted_pred_flag = ExpGolomb.readBit(golombBuffer, bitOffset);
     bitOffset += 1;
 
     // weighted_bipred_idc
-    let weighted_bipred_idc = ExpGolomb.readBit(golombBuffer, bitOffset, 2);
+    // let weighted_bipred_idc = ExpGolomb.readBit(golombBuffer, bitOffset, 2);
     bitOffset += 1;
 
     // pic_init_qp_minus26
@@ -124,11 +124,11 @@ export function decodePPS(payload: Uint8Array): PPSProps {
     let cqioSEV = ExpGolomb.readSEV(golombBuffer, bitOffset);
     bitOffset += cqioSEV.bitLength;
 
-    let deblocking_filter_control_present_flag = ExpGolomb.readBit(golombBuffer, bitOffset);
+    // let deblocking_filter_control_present_flag = ExpGolomb.readBit(golombBuffer, bitOffset);
     bitOffset += 1;
-    let constrained_intra_pred_flag = ExpGolomb.readBit(golombBuffer, bitOffset);
+    // let constrained_intra_pred_flag = ExpGolomb.readBit(golombBuffer, bitOffset);
     bitOffset += 1;
-    let redundant_pic_cnt_present_flag = ExpGolomb.readBit(golombBuffer, bitOffset);
+    // let redundant_pic_cnt_present_flag = ExpGolomb.readBit(golombBuffer, bitOffset);
     bitOffset += 1;
 
     // if( more_rbsp_data( ) ) {

@@ -52,6 +52,8 @@ class Stream extends EventEmitter {
      * @param data
      */
     push(data: any, conf?: PushConf): void {
+        if (conf) {
+        }
         this.emit('data', data);
     }
 

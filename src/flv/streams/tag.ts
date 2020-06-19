@@ -88,10 +88,10 @@ class TagsStream extends Stream {
     }
 
     private parseAudioData_(tag: FlvTag) {
-        const { options_, flv_ } = this;
+        const { /*options_,*/ flv_ } = this;
 
         const data = new FlvTagAudioData(tag.payload, tag.timestamp);
-        const { sampleSize, soundData } = data;
+        const { /*sampleSize,*/ soundData } = data;
 
         if (soundData.audioSpecificConfig) {
             flv_.audioSpecificConfig = soundData.audioSpecificConfig;

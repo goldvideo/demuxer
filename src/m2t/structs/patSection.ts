@@ -59,15 +59,15 @@ class PATSection extends DataViewReader {
 
         this.network_PID = 0x00;
         var n = 0,
-            program_num,
-            reserved_3;
+            program_num;
+        // reserved_3;
         var len = this.section_length - 4 - 5; // 4: crc32, 5: bytes followed by section_length
 
         this.pmtTable = [];
         /* loop by 4 bytes, during  */
         for (; n < len; n += 4) {
             program_num = this.readUint16(buffer, 8 + n);
-            reserved_3 = buffer[10 + n] >> 5;
+            // reserved_3 = buffer[10 + n] >> 5;
 
             if (program_num == 0x00) {
                 this.network_PID = ((buffer[10 + n] & 0x1f) << 8) | buffer[11 + n];

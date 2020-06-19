@@ -37,7 +37,7 @@ export function isObjectLike(value: any): boolean {
 
 export function isEmptyObject(obj: object): boolean {
     for (var prop in obj) {
-        if (obj.hasOwnProperty(prop)) {
+        if (Object.prototype.hasOwnProperty.call(obj, prop)) {
             return false;
         }
     }

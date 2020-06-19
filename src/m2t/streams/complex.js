@@ -10,7 +10,6 @@
  * Combine Video, Audio, Caption c and other data.
  */
 import Stream from '../../util/stream';
-import logger from '../../util/logger';
 
 class M2TSComplexStream extends Stream {
     constructor(ctx, psi) {

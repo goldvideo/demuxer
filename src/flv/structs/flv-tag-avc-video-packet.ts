@@ -7,11 +7,10 @@
 /**
  * AVCVideoPacket structure.
  */
-import { AVCDecoderConfigurationRecord, AVCCodecData, AVCCodec } from '../../codec/avc';
+import { AVCCodec, AVCCodecData, AVCDecoderConfigurationRecord } from '../../codec/avc';
 import NALU from '../../codec/avc/nalu';
 import DataViewReader from '../../util/dv';
 import logger from '../../util/logger';
-import AVContext from '../types/av-context';
 import { PipelineContext } from '../types/flv-pipeline';
 
 // 0 : AVCDecoderConfigurationRecord（AVC sequence header）

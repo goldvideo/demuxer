@@ -2,6 +2,10 @@
 
 > This tool can be used on platforms such as HTML5 players or Node.js
 
+[![npm version](https://badge.fury.io/js/demuxer.svg)](https://www.npmjs.com/package/demuxer)
+[![Downloads](https://img.shields.io/npm/dm/demuxer.svg)](https://www.npmjs.com/package/demuxer)
+[![Build Status](https://travis-ci.org/goldvideo/demuxer.svg?branch=master)](https://travis-ci.org/github/goldvideo/demuxer)
+
 ## Data flow diagram
 
 ![](./doc/design/dataflow.gv.png)

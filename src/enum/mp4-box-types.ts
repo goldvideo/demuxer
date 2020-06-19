@@ -12,49 +12,49 @@
  * @enum {array}
  */
 const BoxType = {
-	avc1: [],
-	avcC: [],
-	btrt: [],
-	dinf: [],
-	dref: [],
-	esds: [],
-	ftyp: [],
-	hdlr: [],
-	mdat: [],
-	mdhd: [],
-	mdia: [],
-	mfhd: [],
-	minf: [],
-	moof: [],
-	moov: [],
-	mp4a: [],
-	'.mp3': [],
-	mvex: [],
-	mvhd: [],
-	pasp: [],
-	sdtp: [],
-	stbl: [],
-	stco: [],
-	stsc: [],
-	stsd: [],
-	stsz: [],
-	stts: [],
-	tfdt: [],
-	tfhd: [],
-	traf: [],
-	trak: [],
-	trun: [],
-	trex: [],
-	tkhd: [],
-	vmhd: [],
-	smhd: []
+    avc1: [],
+    avcC: [],
+    btrt: [],
+    dinf: [],
+    dref: [],
+    esds: [],
+    ftyp: [],
+    hdlr: [],
+    mdat: [],
+    mdhd: [],
+    mdia: [],
+    mfhd: [],
+    minf: [],
+    moof: [],
+    moov: [],
+    mp4a: [],
+    '.mp3': [],
+    mvex: [],
+    mvhd: [],
+    pasp: [],
+    sdtp: [],
+    stbl: [],
+    stco: [],
+    stsc: [],
+    stsd: [],
+    stsz: [],
+    stts: [],
+    tfdt: [],
+    tfhd: [],
+    traf: [],
+    trak: [],
+    trun: [],
+    trex: [],
+    tkhd: [],
+    vmhd: [],
+    smhd: []
 };
 
 let i;
 for (i in BoxType) {
-	if (BoxType.hasOwnProperty(i)) {
-		BoxType[i] = [i.charCodeAt(0), i.charCodeAt(1), i.charCodeAt(2), i.charCodeAt(3)];
-	}
+    if (Object.prototype.hasOwnProperty.call(BoxType, i)) {
+        BoxType[i] = [i.charCodeAt(0), i.charCodeAt(1), i.charCodeAt(2), i.charCodeAt(3)];
+    }
 }
 
 export default BoxType;
