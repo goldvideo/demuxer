@@ -1,6 +1,6 @@
 {
   "name": "demuxer",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "A utility for transmux ts/mp4/flv",
   "main": "dist/demuxer.all.cjs.js",
   "module": "dist/demuxer.all.esm.js",
@@ -8,7 +8,9 @@
     "doc": "doc",
     "test": "test"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "dev": "rollup -c ./rollup.config.js -w -m --environment BUILD_MODE:dev",
     "production": "rollup -c ./rollup.config.js --environment BUILD_MODE:production",
