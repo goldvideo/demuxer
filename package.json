@@ -8,6 +8,7 @@
     "doc": "doc",
     "test": "test"
   },
+  "files": ["dist"],
   "scripts": {
     "dev": "rollup -c ./rollup.config.js -w -m --environment BUILD_MODE:dev",
     "production": "rollup -c ./rollup.config.js --environment BUILD_MODE:production",
