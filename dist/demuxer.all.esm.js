@@ -3300,7 +3300,9 @@ class PesStream extends Stream {
     push(packet) {
         const self = this;
         // PES PID
-        if (packet.PID > 0x00ff && packet.PID < 0x1fff) {
+        // 0x20 - 0xff is reserved for dvb etc. (https://en.wikipedia.org/wiki/Program-specific_information#PSI_labels)
+        // but this is not strict restriction.
+        if (packet.PID > 0x001f && packet.PID < 0x1fff) {
             if (this.PSI.currentProgramPID == -1) {
                 self._pushPacket(packet);
             }

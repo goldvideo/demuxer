@@ -14,6 +14,7 @@
   "scripts": {
     "dev": "rollup -c ./rollup.config.js -w -m --environment BUILD_MODE:dev",
     "production": "rollup -c ./rollup.config.js --environment BUILD_MODE:production",
+    "publish": "npm run lint & npm run production & npm publish",
     "lint": "eslint --ext js,ts src",
     "test": "karma start",
     "doc": "jsdoc ./src/ -c doc/jsdoc.json"
