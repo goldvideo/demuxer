@@ -35,7 +35,7 @@ export interface GOPVector extends Array<GOP> {
     firstPTS?: number;
 }
 
-export interface AACFrameList extends Array<AACFrame> {
+export interface AACFrameVector extends Array<AACFrame> {
     type?: string;
     trackId?: number;
     byteLength?: number;

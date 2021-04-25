@@ -10,9 +10,9 @@
 import { Context } from '../../types/globals';
 import CacheBuffer from '../../util/cache-buffer';
 import Stream from '../../util/stream';
-import PSI from '../psi';
-import Packet from '../structs/packet';
-import PES from '../structs/pes';
+import { PSI } from '../psi';
+import { Packet } from '../structs/packet';
+import { Pes } from '../structs/pes';
 import { PESStreamEmitData } from '../types/pipeline';
 
 class PesStream extends Stream {
@@ -99,7 +99,7 @@ class PesStream extends Stream {
                 throw `pes alloc mem err ${this.cache_buffer.byteLength}`;
             }
 
-            let pesData = new PES(bytes);
+            let pesData = new Pes(bytes);
             let track = this.PSI.findTrack(this.PID);
 
             // console.log(`stream_id: ${pesData.stream_id}, PTS: ${pesData.PTS}, DTS: ${pesData.DTS}`);
@@ -108,7 +108,7 @@ class PesStream extends Stream {
                 let data: PESStreamEmitData = {
                     pid: track.id,
                     stream_type: track.stream_type,
-                    pcr_pid: track.pcr_pid,
+                    // pcr_pid: track.pcr_pid,
                     pes: pesData
                 };
                 // Assemble one pes packet, emit it to next stream.

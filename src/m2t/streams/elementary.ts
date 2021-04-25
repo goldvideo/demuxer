@@ -10,12 +10,12 @@
  *      ES contains only one kind of data, e.g. audio, video or closed caption.
  * @description  https://en.wikipedia.org/wiki/Elementary_stream
  */
-import StreamType from '../../enum/stream-types';
+import { StreamTypes } from '../../enum/stream-types';
 import { Context, GlobalOptions } from '../../types/globals';
 import { isNumber } from '../../util/is';
 import logger from '../../util/logger';
 import Stream from '../../util/stream';
-import PSI from '../psi';
+import { PSI } from '../psi';
 import { PESStreamEmitData, GOPVector } from '../types/pipeline';
 import ADTSStream from './adts';
 import AVCStream from './avc';
@@ -86,11 +86,11 @@ class ElementaryStream extends Stream {
 
         if (options.decodeCodec) {
             switch (stream_type) {
-                case StreamType.H264:
-                case StreamType.HEVC:
+                case StreamTypes.H264:
+                case StreamTypes.HEVC:
                     avcStream.push(data);
                     break;
-                case StreamType.ADTS:
+                case StreamTypes.ADTS:
                     adtsStream.push(data);
                     break;
                 default:

@@ -11,11 +11,11 @@ import DemuxFacade from '../demux-facade';
 import muxErrorCode from '../mux-error-code';
 import { GlobalOptions, PushConf } from '../types/globals';
 import logger from '../util/logger';
-import PSI from './psi';
+import { PSI } from './psi';
 import M2TSComplexStream from './streams/complex';
 import ElementaryStream from './streams/elementary';
 import PesStream from './streams/pes';
-import Packet from './structs/packet';
+import { Packet } from './structs/packet';
 
 const CHUNK_BYTE_LENGTH = 188; // Transport Stream chunks shall be 188 bytes long.
 

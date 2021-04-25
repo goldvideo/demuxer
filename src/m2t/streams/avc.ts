@@ -11,10 +11,10 @@ import { AVCCodec, AVCCodecData } from '../../codec/avc';
 import getAVCConfig from '../../codec/avc/avc-config';
 import NALU from '../../codec/avc/nalu';
 import NaluTypes from '../../enum/nalu-types';
-import StreamType from '../../enum/stream-types';
+import { StreamTypes } from '../../enum/stream-types';
 import logger from '../../util/logger';
 import Stream from '../../util/stream';
-import PSI from '../psi';
+import { PSI } from '../psi';
 import { AVCFrame, GOP, GOPVector, PESStreamEmitData } from '../types/pipeline';
 
 class H264Stream extends Stream {
@@ -70,7 +70,7 @@ class H264Stream extends Stream {
      */
     push(data: PESStreamEmitData) {
         const { stream_type, pes, pid } = data;
-        if (stream_type === StreamType.H264 || stream_type === StreamType.HEVC) {
+        if (stream_type === StreamTypes.H264 || stream_type === StreamTypes.HEVC) {
             this.trackId = pid;
 
             let rawData: AVCCodecData = {
