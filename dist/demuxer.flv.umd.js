@@ -2266,34 +2266,29 @@
      */
     class AVCCodec extends EventEmitter {
         constructor() {
-            super();
-            this.cachedBytes = null;
+            super(...arguments);
+            this.lastState = null;
+            this.lastNALu = null;
+            this.lastNALuState = null;
+        }
+        spitNalu_(bytes, pts, dts) {
+            let nalu = new NALU(bytes);
+            nalu.pts = pts;
+            nalu.dts = dts;
+            this.lastNALu = nalu;
+            this.emit('nalu', nalu);
         }
         push(data) {
-            let self = this;
-            let i = 0, naluOffset = 0, lastStartCodeLength = 0;
-            let { pts, dts, payload, naluSizeLength } = data;
-            let data_byte;
-            if (this.cachedBytes) {
-                try {
-                    data_byte = new Uint8Array(this.cachedBytes.byteLength + payload.byteLength);
-                }
-                catch (e) {
-                    throw `h264 alloc mem error ${this.cachedBytes.byteLength}/${payload.byteLength}`;
-                }
-                data_byte.set(this.cachedBytes);
-                data_byte.set(payload, this.cachedBytes.byteLength);
-            }
-            else {
-                data_byte = payload;
-            }
+            const { lastState, lastNALuState } = this;
+            let i = 0, lastNALuOffset = -1, { pts, dts, payload, naluSizeLength } = data;
             if (!naluSizeLength) {
-                let j = data_byte.byteLength - 1;
+                // Start parse Annex-B Byte stream format
+                let j = payload.byteLength - 1;
                 let dropZerosLength = 0;
                 // Collect tailing zeros.
                 // end with 0x000000 and more...
                 do {
-                    if (data_byte[j] === 0x00) {
+                    if (payload[j] === 0x00) {
                         dropZerosLength++;
                     }
                     else {
@@ -2303,88 +2298,101 @@
                 } while (j > 0);
                 if (dropZerosLength >= 3) {
                     // drop tailing zeros.
-                    data_byte = data_byte.subarray(0, j + 1);
+                    payload = payload.subarray(0, j + 1);
                 }
+                const len = payload.length;
+                let state = 0;
                 do {
-                    let uint32 = (data_byte[i] << 24) | (data_byte[i + 1] << 16) | (data_byte[i + 2] << 8) | data_byte[i + 3];
-                    let start_code = data_byte.length - i >= 4 ? uint32 : -1;
-                    let start_code_length = 0;
-                    let isLastByte = i === data_byte.length - 1;
-                    if (start_code >> 8 === 1) {
-                        /*commence with 3 bytes*/
-                        start_code_length = 3;
+                    let value = payload[i++];
+                    // loop optimization.
+                    if (state === 0) {
+                        state = value ? 0 : 1;
+                        continue;
                     }
-                    else if (start_code === 1) {
-                        /*commence with 4 bytes*/
-                        start_code_length = 4;
+                    else if (state === 1) {
+                        state = value ? 0 : 2;
+                        continue;
                     }
-                    if (start_code_length === 3 || start_code_length === 4 || isLastByte) {
-                        let startPos = naluOffset + lastStartCodeLength;
-                        let isNaluEndByte = isLastByte && dropZerosLength >= 3;
-                        if (i > naluOffset && (!isLastByte || isNaluEndByte)) {
-                            let bytes = data_byte.subarray(startPos, isNaluEndByte ? i + 1 : i);
-                            let nalu = new NALU(bytes);
-                            // PES
-                            nalu.pts = pts;
-                            nalu.dts = dts;
-                            self.emit('nalu', nalu);
-                            naluOffset = i;
+                    // value will be 2 or 3
+                    if (!value) {
+                        state = 3;
+                    }
+                    else if (value === 1) {
+                        if (lastNALuOffset >= 0) {
+                            this.lastNALuState = state;
+                            this.spitNalu_(payload.subarray(lastNALuOffset, i - 1 - state), pts, dts);
                         }
-                        if (isLastByte) {
-                            if (dropZerosLength < 3) {
-                                this.cachedBytes = data_byte.subarray(naluOffset);
-                                this.cachedBytes.pts = pts;
-                                this.cachedBytes.dts = dts;
-                                this.cachedBytes.startCodeLength = lastStartCodeLength;
+                        else {
+                            // naluOffset is undefined => this is the first start code found in this PES packet
+                            // first check if start code delimiter is overlapping between 2 PES packets,
+                            // ie it started in last packet (lastState not zero)
+                            // and ended at the beginning of this PES packet (i <= 4 - lastState)
+                            const lastUnit = this.lastNALu;
+                            if (lastUnit) {
+                                if (lastState && i <= 4 - lastState) {
+                                    // start delimiter overlapping between PES packets
+                                    // strip start delimiter bytes from the end of last NAL unit
+                                    // check if lastUnit had a state different from zero
+                                    if (lastNALuState) {
+                                        // strip last bytes
+                                        lastUnit.rawData = lastUnit.rawData.subarray(0, lastUnit.rawData.byteLength - lastState);
+                                    }
+                                }
+                                // If NAL units are not starting right at the
+                                // beginning of the PES packet, push preceding data
+                                // into previous NAL unit.
+                                let overflow = i - state - 1;
+                                if (overflow > 0) {
+                                    logger.log(`overflow NALU found: ${overflow}/${pts}/${dts}`);
+                                    let cb = new CacheBuffer();
+                                    cb.append(lastUnit.rawData);
+                                    cb.append(payload.subarray(0, overflow));
+                                    let bytes = cb.toNewBytes();
+                                    cb.clear(); // gc
+                                    lastUnit.rawData = bytes;
+                                }
                             }
-                            else {
-                                this.cachedBytes = null;
-                            }
                         }
-                        if (i === naluOffset) {
-                            // record last start code length.
-                            lastStartCodeLength = start_code_length;
+                        // reset state & record last unit start byte offset.
+                        if (i < len) {
+                            // console.log(`'find NALU @ offset: ${i}`);
+                            lastNALuOffset = i;
+                            state = 0;
                         }
-                        i += start_code_length || 1;
                     }
                     else {
-                        i++;
+                        state = 0;
                     }
-                } while (i < data_byte.length);
+                } while (i < len);
+                if (lastNALuOffset >= 0 && state >= 0) {
+                    this.lastNALuState = state;
+                    this.spitNalu_(payload.subarray(lastNALuOffset, len), pts, dts);
+                }
+                this.lastState = state;
             }
             else {
-                let startPos = 0, size = 0, endPos = 0;
+                let startPos = 0, size = 0, endPos = 0, byteLength = payload.length;
                 do {
                     size = 0;
                     for (let k = 0; k < naluSizeLength; k++) {
-                        size = size | (data_byte[startPos + k] << ((naluSizeLength - k - 1) * 8));
+                        size = size | (payload[startPos + k] << ((naluSizeLength - k - 1) * 8));
                     }
                     // size = (data_byte[i] << 24) | (data_byte[i + 1] << 16) | (data_byte[i + 2] << 8) | data_byte[i + 3];
                     startPos += naluSizeLength;
                     endPos = startPos + size;
-                    if (endPos > data_byte.length) {
-                        endPos = data_byte.length;
+                    if (endPos > byteLength) {
+                        endPos = byteLength;
                     }
-                    let bytes = data_byte.subarray(startPos, endPos);
-                    let nalu = new NALU(bytes);
-                    // PES
-                    nalu.pts = pts;
-                    nalu.dts = dts;
-                    self.emit('nalu', nalu);
+                    this.spitNalu_(payload.subarray(startPos, endPos), pts, dts);
                     startPos = endPos;
-                } while (startPos < data_byte.length);
-            }
-            if (this.cachedBytes) {
-                let nalu = new NALU(this.cachedBytes.subarray(this.cachedBytes.startCodeLength));
-                nalu.pts = this.cachedBytes.pts;
-                nalu.dts = this.cachedBytes.dts;
-                this.emit('nalu', nalu);
-                this.cachedBytes = null;
+                } while (startPos < byteLength);
             }
             this.emit('done');
         }
         reset() {
-            this.cachedBytes = null;
+            this.lastState = null;
+            this.lastNALu = null;
+            this.lastNALuState = null;
         }
     }
 

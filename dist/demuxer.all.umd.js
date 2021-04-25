@@ -1122,96 +1122,47 @@
     var muxErrorCode = codes;
 
     /**
-     * @file: dv.js, created at Monday, 23rd December 2019 3:47:23 pm
-     * @copyright Copyright (c) 2020
-     * @author gem <gems.xu@gmail.com>
-     */
-    /**
-     * Bit buffer reader like DataView.
-     */
-    function read(buf) {
-        let byteOffset = 0;
-        if (ArrayBuffer.isView(buf)) {
-            byteOffset = buf.byteOffset;
-            buf = buf.buffer;
-        }
-        return new DataView(buf, byteOffset);
-    }
-    class DataViewReader {
-        constructor() { }
-        /**
-         * Gets an unsigned 8-bit integer (unsigned byte).
-         * @param buffer
-         * @param byteOffset    The offset, in byte, from the start of the view where to read the data.
-         * @returns {number}    An unsigned 8-bit integer number.
-         */
-        readUint8(buffer, byteOffset) {
-            return read(buffer).getUint8(byteOffset);
-        }
-        /**
-         * Gets an unsigned 16-bit integer (unsigned long).
-         * @param buffer
-         * @param byteOffset     The offset, in byte, from the start of the view where to read the data.
-         * @param littleEndian   Indicates whether the 16-bit int is stored in little- or big-endian format.
-         * @returns {number}     An unsigned 16-bit integer number.
-         */
-        readUint16(buffer, byteOffset, littleEndian = false) {
-            return read(buffer).getUint16(byteOffset, littleEndian);
-        }
-        /**
-         * Gets an unsigned 32-bit integer (unsigned long).
-         * @param buffer
-         * @param byteOffset        The offset, in byte, from the start of the view where to read the data.
-         * @param littleEndian      Indicates whether the 32-bit int is stored in little- or big-endian format.
-         * @returns {number}        An unsigned 32-bit integer number.
-         */
-        readUint32(buffer, byteOffset, littleEndian = false) {
-            return read(buffer).getUint32(byteOffset, littleEndian);
-        }
-    }
-
-    /**
      * @file: patSection.js, created at Monday, 23rd December 2019 3:47:23 pm
      * @copyright Copyright (c) 2020
      * @author gem <gems.xu@gmail.com>
      */
     /**
-     * @extends DataViewReader
+     * Structure for pat.
      */
-    class PATSection extends DataViewReader {
+    class PATSection {
+        // CRC_32: number;
         constructor(buffer) {
-            super();
             // program_association_section 0x00
-            this.table_id = buffer[0];
-            this.section_syntax_indicator = buffer[1] >> 7;
+            // this.table_id = buffer[0];
+            // this.section_syntax_indicator = buffer[1] >> 7;
             // this.zero = (buffer[1] >> 6) & 0x1;
             // this.reserved_0 = (buffer[1] >> 4) & 0x3;
             // the number of bytes of the section
             // starting immediately following the section_length field, and including the CRC.
-            this.section_length = ((buffer[1] & 0x0f) << 8) | buffer[2];
-            this.transport_stream_id = this.readUint16(buffer, 3);
+            let section_length = ((buffer[1] & 0x0f) << 8) | buffer[2];
+            // this.transport_stream_id = (buffer[3] << 8) | buffer[4];
             // this.reserved_1 = buffer[5] >> 6;
-            this.version_number = (buffer[5] >> 1) & 0x1f;
-            this.current_next_indicator = buffer[5] && 0x01;
+            // this.version_number = (buffer[5] >> 1) & 0x1f;
+            // this.current_next_indicator = buffer[5] && 0x01;
             // The section_number of the first section in the Program Association Table shall be 0x00.
             // It shall be incremented by 1 with each additional section in the PAT.
-            this.section_number = buffer[6];
+            // this.section_number = buffer[6];
             // The number of the last section (that is, the section with the highest section_number) of the complete PAT.
-            this.last_section_number = buffer[7];
-            this.network_PID = 0x00;
+            // this.last_section_number = buffer[7];
+            // this.network_PID = 0x00;
             var n = 0, program_num;
             // reserved_3;
-            var len = this.section_length - 4 - 5; // 4: crc32, 5: bytes followed by section_length
+            var len = section_length - 4 - 5; // 4: crc32, 5: bytes followed by section_length
             this.pmtTable = [];
             /* loop by 4 bytes, during  */
             for (; n < len; n += 4) {
-                program_num = this.readUint16(buffer, 8 + n);
+                program_num = (buffer[n + 8] << 8) | buffer[n + 9];
                 // reserved_3 = buffer[10 + n] >> 5;
                 if (program_num == 0x00) {
-                    this.network_PID = ((buffer[10 + n] & 0x1f) << 8) | buffer[11 + n];
+                    let network_PID = ((buffer[10 + n] & 0x1f) << 8) | buffer[11 + n];
                     // 记录该TS流的网络PID
                     // TS_network_Pid = this.network_PID;
-                    logger.log('packet->network_PID %0x /n/n', this.network_PID);
+                    logger.log('packet->network_PID %0x /n/n', network_PID);
                 }
                 else {
                     this.pmtTable.push({
@@ -1226,12 +1177,12 @@
                     // TS_program.push_back(PAT_program);//向全局PAT节目数组中添加PAT节目信息
                 }
             }
-            var crcLength = this.section_length + 3;
-            this.CRC_32 =
-                ((buffer[crcLength - 4] & 0x000000ff) << 24) |
-                    ((buffer[crcLength - 3] & 0x000000ff) << 16) |
-                    ((buffer[crcLength - 2] & 0x000000ff) << 8) |
-                    (buffer[crcLength - 1] & 0x000000ff);
+            // var crcLength = this.section_length + 3;
+            // this.CRC_32 =
+            //     ((buffer[crcLength - 4] & 0x000000ff) << 24) |
+            //     ((buffer[crcLength - 3] & 0x000000ff) << 16) |
+            //     ((buffer[crcLength - 2] & 0x000000ff) << 8) |
+            //     (buffer[crcLength - 1] & 0x000000ff);
         }
     }
 
@@ -1241,48 +1192,48 @@
      * @author gem <gems.xu@gmail.com>
      */
     /**
-     * @extends DataViewReader
+     * Structure for PMT.
      */
-    class PMTSection extends DataViewReader {
+    class PMTSection {
+        // CRC_32: number;
         constructor(buffer) {
-            super();
             // program_map_section  0x02
-            this.table_id = buffer[0];
-            this.section_syntax_indicator = buffer[1] >> 7;
+            // this.table_id = buffer[0];
+            // this.section_syntax_indicator = buffer[1] >> 7;
             // this.zero = (buffer[1] >> 6) & 0x1;
             // this.reserved_0 = (buffer[1] >> 4) & 0x3;
             // the number of bytes of the section
             // starting immediately following the section_length field, and including the CRC.
-            this.section_length = ((buffer[1] & 0x0f) << 8) | buffer[2];
+            let section_length = ((buffer[1] & 0x0f) << 8) | buffer[2];
             // It specifies the program to which the program_map_PID is applicable.
-            this.program_number = this.readUint16(buffer, 3);
+            // this.program_number = (buffer[3] << 8) | buffer[4];
             // this.reserved_1 = buffer[5] >> 6;
-            this.version_number = (buffer[5] >> 1) & 0x1f;
-            this.current_next_indicator = buffer[5] && 0x01;
+            // this.version_number = (buffer[5] >> 1) & 0x1f;
+            // this.current_next_indicator = buffer[5] && 0x01;
             // The section_number of the first section in the Program Association Table shall be 0x00.
             // It shall be incremented by 1 with each additional section in the PAT.
-            this.section_number = buffer[6];
+            // this.section_number = buffer[6];
             // The number of the last section (that is, the section with the highest section_number) of the complete PAT.
-            this.last_section_number = buffer[7];
+            // this.last_section_number = buffer[7];
             // contain the PCR fields valid for the program specified by program_number.
-            this.PCR_PID = ((buffer[8] & 0x1f) << 8) | buffer[9];
+            // this.PCR_PID = ((buffer[8] & 0x1f) << 8) | buffer[9];
             // this.reserved_2 = buffer[10] >> 4;
             // The number of bytes of the descriptors immediately following the program_info_length field.
-            this.program_info_length = ((buffer[10] & 0x0f) << 8) | buffer[11];
-            if (this.program_info_length < 0) {
+            const program_info_length = ((buffer[10] & 0x0f) << 8) | buffer[11];
+            if (program_info_length < 0) {
                 return;
             }
-            else if (this.program_info_length > 2) {
+            else if (program_info_length > 2) {
                 let i = 0;
-                while (i < this.program_info_length) {
+                while (i < program_info_length) {
                     // let descriptor_tag = buffer[12 + i];
                     let descriptor_length = buffer[13 + i];
                     // 	logger.log('descriptor_tag', descriptor_tag, descriptor_length);
                     i += descriptor_length;
                 }
             }
-            var es_section_pos = 12 + this.program_info_length;
-            var es_section_len = this.section_length - this.program_info_length - 9 - 4; // 9: bytes followed by section_length, 4: crc32
+            var es_section_pos = 12 + program_info_length;
+            var es_section_len = section_length - program_info_length - 9 - 4; // 9: bytes followed by section_length, 4: crc32
             var es_section_end = es_section_pos + es_section_len;
             if (es_section_pos >= es_section_end) {
                 logger.warn(`es_section_pos < es_section_end ${es_section_pos}, ${es_section_end}`);
@@ -1291,118 +1242,32 @@
             this.pes_table = [];
             let j = 0;
             while (j < es_section_len) {
-                let stream_type = buffer[es_section_pos + j];
-                let elementary_PID = this.readUint16(buffer, es_section_pos + j + 1) & 0x1fff;
-                let ES_info_length = this.readUint16(buffer, es_section_pos + j + 3) & 0x0fff;
+                let basePos = es_section_pos + j;
+                let stream_type = buffer[basePos];
+                let elementary_PID = ((buffer[basePos + 1] << 8) | buffer[basePos + 2]) & 0x1fff;
+                let ES_info_length = ((buffer[basePos + 3] << 8) | buffer[basePos + 4]) & 0x0fff;
                 this.pes_table.push({
                     streamType: stream_type,
                     PID: elementary_PID
                 });
-                if (ES_info_length > 2) {
-                    let k = 0;
-                    let es_pos = es_section_pos + j + 5;
-                    while (k < ES_info_length) {
-                        // let descriptor_tag = buffer[es_pos + k];
-                        let descriptor_length = buffer[es_pos + k];
-                        // if (descriptor_tag === )
-                        k += descriptor_length;
-                    }
-                }
+                // if (ES_info_length > 2) {
+                //     let k = 0;
+                //     let es_pos = basePos + 5;
+                //     while (k < ES_info_length) {
+                //         // let descriptor_tag = buffer[es_pos + k];
+                //         let descriptor_length = buffer[es_pos + k];
+                //         // if (descriptor_tag === )
+                //         k += descriptor_length;
+                //     }
+                // }
                 j += ES_info_length + 5;
             }
-            var crcLength = this.section_length + 3;
-            this.CRC_32 =
-                ((buffer[crcLength - 4] & 0x000000ff) << 24) |
-                    ((buffer[crcLength - 3] & 0x000000ff) << 16) |
-                    ((buffer[crcLength - 2] & 0x000000ff) << 8) |
-                    (buffer[crcLength - 1] & 0x000000ff);
-        }
-        parse() {
-            // let data = this.uint8;
-        }
-    }
-
-    /**
-     * @file: sdtSection.js, created at Monday, 23rd December 2019 3:47:23 pm
-     * @copyright Copyright (c) 2020
-     * @author gem <gems.xu@gmail.com>
-     */
-    class SDTSection extends DataViewReader {
-        constructor(buffer) {
-            super();
-            // program_map_section  0x02
-            this.table_id = buffer[0];
-            this.section_syntax_indicator = buffer[1] >> 7;
-            // this.reserved_0 = (buffer[1] >> 4) & 0x3;
-            // the number of bytes of the section
-            // starting immediately following the section_length field, and including the CRC.
-            this.section_length = ((buffer[1] & 0x0f) << 8) | buffer[2];
-            // This is a 16-bit field which serves as a label for identification of the TS,
-            // about which the SDT informs, from any other multiplex within the delivery system
-            this.transport_stream_id = this.readUint16(buffer, 3);
-            // this.reserved_1 = buffer[5] >> 6;
-            this.version_number = (buffer[5] >> 1) & 0x1f;
-            this.current_next_indicator = buffer[5] & 0x01;
-            // The section_number of the first section in the sub_table shall be "0x00".
-            // The section_number shall be incremented by 1 with each additional section
-            // with the same table_id, transport_stream_id, and original_network_id.
-            this.section_number = buffer[6];
-            // This 8-bit field specifies the number of the last section
-            // (that is, the section with the highest section_number) of the sub_table of which this section is part
-            this.last_section_number = buffer[7];
-            // This field gives the label identifying the network_id of the originating delivery system.
-            this.original_network_id = this.readUint16(buffer, 8);
-            // this.reserved_2 = buffer[10];
-            // section_length - (following the section_length field length) - crc32Length
-            let sv_len = this.section_length - 8 - 4; // 8: bytes followed by section_length, 4: crc32
-            this.service_table = [];
-            let i = 0;
-            while (i < sv_len) {
-                let j = 0;
-                let service = {
-                    service_id: this.readUint16(buffer, 11),
-                    EIT_schedule_flag: buffer[13] & 0x02,
-                    EIT_present_following_flag: buffer[13] & 0x01,
-                    running_status: buffer[14] >> 5,
-                    free_CA_mode: (buffer[14] >> 4) & 0x01,
-                    descriptors_loop_length: ((buffer[14] & 0x0f) << 8) | buffer[15],
-                    provider_name: '',
-                    name: ''
-                };
-                while (j < service.descriptors_loop_length) {
-                    let start = 16 + j;
-                    let descriptor_tag = buffer[start];
-                    let descriptor_length = buffer[start + 1];
-                    switch (descriptor_tag) {
-                        case 0x48: // service_descriptor
-                            {
-                                // let service_type = buffer[start + 2];
-                                let service_provider_name = [];
-                                let service_provider_name_length = buffer[start + 3];
-                                let k = 0, l = 0, nextPos = start + 4;
-                                for (k = 0; k < service_provider_name_length; k++) {
-                                    service_provider_name.push(String.fromCharCode(buffer[nextPos]));
-                                    nextPos += 1;
-                                }
-                                service.provider_name = service_provider_name.join('');
-                                let service_name = [];
-                                let service_name_length = buffer[nextPos];
-                                nextPos += 1;
-                                for (l = 0; l < service_name_length; l++) {
-                                    service_name.push(String.fromCharCode(buffer[nextPos]));
-                                    nextPos += 1;
-                                }
-                                service.name = service_name.join('');
-                            }
-                            break;
-                        default:
-                            logger.warn(`sdt section unhandled descriptor_tag ${descriptor_tag}`);
-                    }
-                    j += 2 + descriptor_length;
-                }
-                this.service_table.push(service);
-                i += 5 + service.descriptors_loop_length;
-            }
+            // var crcLength = this.section_length + 3;
+            // this.CRC_32 =
+            //     ((buffer[crcLength - 4] & 0x000000ff) << 24) |
+            //     ((buffer[crcLength - 3] & 0x000000ff) << 16) |
+            //     ((buffer[crcLength - 2] & 0x000000ff) << 8) |
+            //     (buffer[crcLength - 1] & 0x000000ff);
         }
     }
 
@@ -1432,12 +1297,14 @@
      * @copyright Copyright (c) 2020
      * @author gem <gems.xu@gmail.com>
      */
-    class Metadata {
-    }
+    // class Metadata {
+    //     service_name: string;
+    //     service_provider: string;
+    // }
     class PSI {
         constructor(ctx) {
-            this.context = ctx;
-            this.metadata = new Metadata();
+            // this.context = ctx;
+            // this.metadata = new Metadata();
             this.pat_table = [];
             this.pes_streams = [];
         }
@@ -1451,6 +1318,12 @@
             }
             return _pmtIds.length > 0 ? _pmtIds[0] : -1;
         }
+        get tracks() {
+            return this.pes_streams;
+        }
+        // get pmtTable() {
+        //     return this.pat_table;
+        // }
         /**
          * 目前对于PSI的信息，持久化保留在内存中
          * 对于同一个片子，HLS规范会规定只能有一个 PMT/PAT 表
@@ -1458,7 +1331,7 @@
          * 有些 TS 文件在HLS切片器切割的时候，没有带上PAT/PMT等表，需要相邻 TS 给定的表信息
          */
         reset() {
-            this.metadata = new Metadata();
+            // this.metadata = new Metadata();
             this.pat_table.splice(0, this.pat_table.length);
             this.pes_streams.splice(0, this.pes_streams.length);
         }
@@ -1475,10 +1348,7 @@
             else if (CAT_PID === packet.PID) ;
             else if (TSDT_PID === packet.PID) ;
             else if (0x0003 <= packet.PID && packet.PID <= 0x000f) ;
-            else if (SDT_PID === packet.PID) {
-                /* Service Description Table */
-                this._parseSdt(packet);
-            }
+            else if (SDT_PID === packet.PID) ;
             else if (packet.PID === self.currentProgramPID) {
                 /* PMT PID */
                 this._parsePmt(packet);
@@ -1518,7 +1388,6 @@
         /**
          * Parse PAT Packet
          * @param pack
-         * @private
          */
         _parsePat(pack) {
             let data;
@@ -1608,7 +1477,6 @@
                 streams.push({
                     id: stream.PID,
                     stream_type: stream.streamType,
-                    pcr_pid: pmt.PCR_PID,
                     duration: 0,
                     sps: [],
                     pps: [],
@@ -1618,27 +1486,6 @@
                     height: 0
                 });
             }
-        }
-        /**
-         * Parse SDT Packet
-         * @param pack
-         */
-        _parseSdt(pack) {
-            let data;
-            if (pack.payload_unit_start_indicator) {
-                // psi has pointer_field
-                let pointer = pack.payload[0];
-                data = pack.payload.subarray(pointer + 1);
-            }
-            else {
-                data = pack.payload;
-            }
-            let sdt = new SDTSection(data);
-            if (sdt.service_table.length > 0) {
-                this.metadata.service_name = sdt.service_table[0].name;
-                this.metadata.service_provider = sdt.service_table[0].provider_name;
-            }
-            return sdt;
         }
     }
 
@@ -2135,6 +1982,55 @@
             track.codec = config.codec;
             track.realCodec = config.realCodec;
             track.isAAC = true;
+        }
+    }
+
+    /**
+     * @file: dv.js, created at Monday, 23rd December 2019 3:47:23 pm
+     * @copyright Copyright (c) 2020
+     * @author gem <gems.xu@gmail.com>
+     */
+    /**
+     * Bit buffer reader like DataView.
+     */
+    function read(buf) {
+        let byteOffset = 0;
+        if (ArrayBuffer.isView(buf)) {
+            byteOffset = buf.byteOffset;
+            buf = buf.buffer;
+        }
+        return new DataView(buf, byteOffset);
+    }
+    class DataViewReader {
+        constructor() { }
+        /**
+         * Gets an unsigned 8-bit integer (unsigned byte).
+         * @param buffer
+         * @param byteOffset    The offset, in byte, from the start of the view where to read the data.
+         * @returns {number}    An unsigned 8-bit integer number.
+         */
+        readUint8(buffer, byteOffset) {
+            return read(buffer).getUint8(byteOffset);
+        }
+        /**
+         * Gets an unsigned 16-bit integer (unsigned long).
+         * @param buffer
+         * @param byteOffset     The offset, in byte, from the start of the view where to read the data.
+         * @param littleEndian   Indicates whether the 16-bit int is stored in little- or big-endian format.
+         * @returns {number}     An unsigned 16-bit integer number.
+         */
+        readUint16(buffer, byteOffset, littleEndian = false) {
+            return read(buffer).getUint16(byteOffset, littleEndian);
+        }
+        /**
+         * Gets an unsigned 32-bit integer (unsigned long).
+         * @param buffer
+         * @param byteOffset        The offset, in byte, from the start of the view where to read the data.
+         * @param littleEndian      Indicates whether the 32-bit int is stored in little- or big-endian format.
+         * @returns {number}        An unsigned 32-bit integer number.
+         */
+        readUint32(buffer, byteOffset, littleEndian = false) {
+            return read(buffer).getUint32(byteOffset, littleEndian);
         }
     }
 
@@ -2810,34 +2706,29 @@
      */
     class AVCCodec extends EventEmitter {
         constructor() {
-            super();
-            this.cachedBytes = null;
+            super(...arguments);
+            this.lastState = null;
+            this.lastNALu = null;
+            this.lastNALuState = null;
+        }
+        spitNalu_(bytes, pts, dts) {
+            let nalu = new NALU(bytes);
+            nalu.pts = pts;
+            nalu.dts = dts;
+            this.lastNALu = nalu;
+            this.emit('nalu', nalu);
         }
         push(data) {
-            let self = this;
-            let i = 0, naluOffset = 0, lastStartCodeLength = 0;
-            let { pts, dts, payload, naluSizeLength } = data;
-            let data_byte;
-            if (this.cachedBytes) {
-                try {
-                    data_byte = new Uint8Array(this.cachedBytes.byteLength + payload.byteLength);
-                }
-                catch (e) {
-                    throw `h264 alloc mem error ${this.cachedBytes.byteLength}/${payload.byteLength}`;
-                }
-                data_byte.set(this.cachedBytes);
-                data_byte.set(payload, this.cachedBytes.byteLength);
-            }
-            else {
-                data_byte = payload;
-            }
+            const { lastState, lastNALuState } = this;
+            let i = 0, lastNALuOffset = -1, { pts, dts, payload, naluSizeLength } = data;
             if (!naluSizeLength) {
-                let j = data_byte.byteLength - 1;
+                // Start parse Annex-B Byte stream format
+                let j = payload.byteLength - 1;
                 let dropZerosLength = 0;
                 // Collect tailing zeros.
                 // end with 0x000000 and more...
                 do {
-                    if (data_byte[j] === 0x00) {
+                    if (payload[j] === 0x00) {
                         dropZerosLength++;
                     }
                     else {
@@ -2847,88 +2738,101 @@
                 } while (j > 0);
                 if (dropZerosLength >= 3) {
                     // drop tailing zeros.
-                    data_byte = data_byte.subarray(0, j + 1);
+                    payload = payload.subarray(0, j + 1);
                 }
+                const len = payload.length;
+                let state = 0;
                 do {
-                    let uint32 = (data_byte[i] << 24) | (data_byte[i + 1] << 16) | (data_byte[i + 2] << 8) | data_byte[i + 3];
-                    let start_code = data_byte.length - i >= 4 ? uint32 : -1;
-                    let start_code_length = 0;
-                    let isLastByte = i === data_byte.length - 1;
-                    if (start_code >> 8 === 1) {
-                        /*commence with 3 bytes*/
-                        start_code_length = 3;
+                    let value = payload[i++];
+                    // loop optimization.
+                    if (state === 0) {
+                        state = value ? 0 : 1;
+                        continue;
                     }
-                    else if (start_code === 1) {
-                        /*commence with 4 bytes*/
-                        start_code_length = 4;
+                    else if (state === 1) {
+                        state = value ? 0 : 2;
+                        continue;
                     }
-                    if (start_code_length === 3 || start_code_length === 4 || isLastByte) {
-                        let startPos = naluOffset + lastStartCodeLength;
-                        let isNaluEndByte = isLastByte && dropZerosLength >= 3;
-                        if (i > naluOffset && (!isLastByte || isNaluEndByte)) {
-                            let bytes = data_byte.subarray(startPos, isNaluEndByte ? i + 1 : i);
-                            let nalu = new NALU(bytes);
-                            // PES
-                            nalu.pts = pts;
-                            nalu.dts = dts;
-                            self.emit('nalu', nalu);
-                            naluOffset = i;
+                    // value will be 2 or 3
+                    if (!value) {
+                        state = 3;
+                    }
+                    else if (value === 1) {
+                        if (lastNALuOffset >= 0) {
+                            this.lastNALuState = state;
+                            this.spitNalu_(payload.subarray(lastNALuOffset, i - 1 - state), pts, dts);
                         }
-                        if (isLastByte) {
-                            if (dropZerosLength < 3) {
-                                this.cachedBytes = data_byte.subarray(naluOffset);
-                                this.cachedBytes.pts = pts;
-                                this.cachedBytes.dts = dts;
-                                this.cachedBytes.startCodeLength = lastStartCodeLength;
+                        else {
+                            // naluOffset is undefined => this is the first start code found in this PES packet
+                            // first check if start code delimiter is overlapping between 2 PES packets,
+                            // ie it started in last packet (lastState not zero)
+                            // and ended at the beginning of this PES packet (i <= 4 - lastState)
+                            const lastUnit = this.lastNALu;
+                            if (lastUnit) {
+                                if (lastState && i <= 4 - lastState) {
+                                    // start delimiter overlapping between PES packets
+                                    // strip start delimiter bytes from the end of last NAL unit
+                                    // check if lastUnit had a state different from zero
+                                    if (lastNALuState) {
+                                        // strip last bytes
+                                        lastUnit.rawData = lastUnit.rawData.subarray(0, lastUnit.rawData.byteLength - lastState);
+                                    }
+                                }
+                                // If NAL units are not starting right at the
+                                // beginning of the PES packet, push preceding data
+                                // into previous NAL unit.
+                                let overflow = i - state - 1;
+                                if (overflow > 0) {
+                                    logger.log(`overflow NALU found: ${overflow}/${pts}/${dts}`);
+                                    let cb = new CacheBuffer();
+                                    cb.append(lastUnit.rawData);
+                                    cb.append(payload.subarray(0, overflow));
+                                    let bytes = cb.toNewBytes();
+                                    cb.clear(); // gc
+                                    lastUnit.rawData = bytes;
+                                }
                             }
-                            else {
-                                this.cachedBytes = null;
-                            }
                         }
-                        if (i === naluOffset) {
-                            // record last start code length.
-                            lastStartCodeLength = start_code_length;
+                        // reset state & record last unit start byte offset.
+                        if (i < len) {
+                            // console.log(`'find NALU @ offset: ${i}`);
+                            lastNALuOffset = i;
+                            state = 0;
                         }
-                        i += start_code_length || 1;
                     }
                     else {
-                        i++;
+                        state = 0;
                     }
-                } while (i < data_byte.length);
+                } while (i < len);
+                if (lastNALuOffset >= 0 && state >= 0) {
+                    this.lastNALuState = state;
+                    this.spitNalu_(payload.subarray(lastNALuOffset, len), pts, dts);
+                }
+                this.lastState = state;
             }
             else {
-                let startPos = 0, size = 0, endPos = 0;
+                let startPos = 0, size = 0, endPos = 0, byteLength = payload.length;
                 do {
                     size = 0;
                     for (let k = 0; k < naluSizeLength; k++) {
-                        size = size | (data_byte[startPos + k] << ((naluSizeLength - k - 1) * 8));
+                        size = size | (payload[startPos + k] << ((naluSizeLength - k - 1) * 8));
                     }
                     // size = (data_byte[i] << 24) | (data_byte[i + 1] << 16) | (data_byte[i + 2] << 8) | data_byte[i + 3];
                     startPos += naluSizeLength;
                     endPos = startPos + size;
-                    if (endPos > data_byte.length) {
-                        endPos = data_byte.length;
+                    if (endPos > byteLength) {
+                        endPos = byteLength;
                     }
-                    let bytes = data_byte.subarray(startPos, endPos);
-                    let nalu = new NALU(bytes);
-                    // PES
-                    nalu.pts = pts;
-                    nalu.dts = dts;
-                    self.emit('nalu', nalu);
+                    this.spitNalu_(payload.subarray(startPos, endPos), pts, dts);
                     startPos = endPos;
-                } while (startPos < data_byte.length);
-            }
-            if (this.cachedBytes) {
-                let nalu = new NALU(this.cachedBytes.subarray(this.cachedBytes.startCodeLength));
-                nalu.pts = this.cachedBytes.pts;
-                nalu.dts = this.cachedBytes.dts;
-                this.emit('nalu', nalu);
-                this.cachedBytes = null;
+                } while (startPos < byteLength);
             }
             this.emit('done');
         }
         reset() {
-            this.cachedBytes = null;
+            this.lastState = null;
+            this.lastNALu = null;
+            this.lastNALuState = null;
         }
     }
 
@@ -3212,41 +3116,40 @@
      * @author gem <gems.xu@gmail.com>
      */
     /**
-     * @extends DataViewReader
+     * Structure for Pes.
      */
-    class Pes extends DataViewReader {
+    class Pes {
         constructor(buffer) {
-            super();
             // The packet_start_code_prefix is a 24-bit code.
-            this.start_code_prefix = (this.readUint16(buffer, 0) << 8) | buffer[2];
+            // this.start_code_prefix = (buffer[0] << 16) | (buffer[1] << 8) | buffer[2];
             // In Transport Streams,
             // the stream_id may be set to any valid value which correctly describes the elementary stream type.
             // the elementary stream type is specified in the PSI(Program Specific Information).
-            this.stream_id = buffer[3];
+            // this.stream_id = buffer[3];
             // A 16-bit field specifying the number of bytes in the PES packet.
-            this.packet_length = this.readUint16(buffer, 4);
-            this.data_alignment_indicator = buffer[6] & 0x04;
-            this.copyright = buffer[6] & 0x02;
+            // this.packet_length = (buffer[4] << 8) | buffer[5];
+            // this.data_alignment_indicator = buffer[6] & 0x04;
+            // this.copyright = buffer[6] & 0x02;
             // PTS (presentation time stamp)
             // DTS (decoding time stamp)
-            this.PTS_DTS_flags = buffer[7] >> 6;
+            let PTS_DTS_flags = buffer[7] >> 6;
             // ESCR (Elementary Stream Clock Reference system):
             // A time stamp in the PES Stream from which decoders of PES streams may derive timing.
-            this.ESCR_flag = buffer[7] & 0x20;
-            this.ES_rate_flag = buffer[7] & 0x10;
-            this.trick_mode_flag = buffer[7] & 0x08;
-            this.additional_copy_info_flag = buffer[7] & 0x04;
-            this.CRC_flag = buffer[7] & 0x02;
-            this.extension_flag = buffer[7] & 0x01;
-            this.header_data_length = buffer[8];
+            // this.ESCR_flag = buffer[7] & 0x20;
+            // this.ES_rate_flag = buffer[7] & 0x10;
+            // this.trick_mode_flag = buffer[7] & 0x08;
+            // this.additional_copy_info_flag = buffer[7] & 0x04;
+            // this.CRC_flag = buffer[7] & 0x02;
+            // this.extension_flag = buffer[7] & 0x01;
+            let header_data_length = buffer[8];
             this.PTS = 0;
-            if ((this.PTS_DTS_flags & 0x02) == 0x02) {
+            if ((PTS_DTS_flags & 0x02) == 0x02) {
                 this.PTS = this.calcTimestamp_(buffer, 9);
             }
             // if there is no dts, let DTS=PTS
             // See Annex D - D.0.2 Audio and Video Presentation Synchronization
             this.DTS = this.PTS;
-            if ((this.PTS_DTS_flags & 0x01) == 0x01) {
+            if ((PTS_DTS_flags & 0x01) == 0x01) {
                 this.DTS = this.calcTimestamp_(buffer, 14);
             }
             // if (this.ESCR_flag === 1) {
@@ -3262,7 +3165,7 @@
             //
             // if (this.ESCR_flag === 1) {
             // }
-            this.data_byte = buffer.subarray(9 + this.header_data_length);
+            this.data_byte = buffer.subarray(9 + header_data_length);
             // this.isStartPes = (buffer[0] << 16 | buffer[1] << 8 | buffer[2]) & 0xffffff === 0x000001;
         }
         /**
@@ -3279,10 +3182,6 @@
                 ((buffer[start + 2] >> 1) << 15) +
                 (buffer[start + 3] << 7) +
                 (buffer[start + 4] >> 1));
-        }
-        valid() {
-            let start_code_prefix = this.start_code_prefix;
-            return start_code_prefix[0] === 0x00 && start_code_prefix[1] === 0x00 && start_code_prefix[2] === 0x01;
         }
     }
 
@@ -3361,7 +3260,7 @@
                     let data = {
                         pid: track.id,
                         stream_type: track.stream_type,
-                        pcr_pid: track.pcr_pid,
+                        // pcr_pid: track.pcr_pid,
                         pes: pesData
                     };
                     // Assemble one pes packet, emit it to next stream.
@@ -3379,21 +3278,20 @@
      */
     const SYNC_BYTE = 0x47; // The sync_byte is a fixed 8-bit field whose value is '0100 0111' (0x47).
     /**
-     * @extends DataViewReader
+     * packet structure.
      */
-    class Packet extends DataViewReader {
+    class Packet {
         /**
          * @param buffer
          */
         constructor(buffer) {
-            super();
             this.sync_byte = buffer[0];
-            this.transport_error_indicator = buffer[1] >> 7;
+            // this.transport_error_indicator = buffer[1] >> 7;
             // Indicating transport stream packets carry PES packets or PSI data
             // PES: 1 -> commence with the first byte of a PES packet,  0 -> no PES packet shall start in this packet.
             // PSI: 1 -> carries the first byte of a PSI section, 0 -> no pointer_field in the payload.
             this.payload_unit_start_indicator = (buffer[1] >> 6) & 1;
-            this.transport_priority = (buffer[1] >>> 5) & 1;
+            // this.transport_priority = (buffer[1] >>> 5) & 1;
             // The PID(Packet ID) is a 13-bit field, indicating the type of the data stored in the packet payload.
             // NOTE – The transport packets with PID values 0x0000, 0x0001, and 0x0010-0x1FFE are allowed to carry a PCR.
             // ISO/IEC 13818-1 : 2000 (E)
@@ -3426,9 +3324,9 @@
             // 0x0080                 TO 0x00FE User defined
             // 0x00FF                 Reserved
             // 0x1FFF                 Null packet
-            this.PID = this.readUint16(buffer, 1) & 0x1fff;
+            this.PID = ((buffer[1] << 8) | buffer[2]) & 0x1fff;
             // transport_scrambling_control
-            this.tsc = buffer[3] >> 6;
+            // this.tsc = buffer[3] >> 6;
             // adaptation_field_control
             // Value  Description
             // 00     Reserved for future use by ISO/IEC
@@ -3437,8 +3335,7 @@
             // 11     Adaptation_field followed by payload
             this.afc = (buffer[3] >> 4) & 3;
             // '1' indicates that the discontinuity state is true for the current Transport Stream packet.
-            // continuity_counter
-            this.continuity_counter = buffer[3] & 0xf;
+            // this.continuity_counter = buffer[3] & 0xf;
             // self defines.
             this.has_payload = this.afc & 1;
             this.has_adaptation = this.afc & 2;
@@ -3455,8 +3352,7 @@
             }
         }
         valid() {
-            let val = this.sync_byte === SYNC_BYTE && this.has_payload === 1;
-            return val;
+            return this.sync_byte === SYNC_BYTE && this.has_payload === 1;
         }
     }
 
