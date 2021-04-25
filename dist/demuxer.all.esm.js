@@ -1297,8 +1297,7 @@ const SDT_PID = 0x0011;
 //     service_provider: string;
 // }
 class PSI {
-    constructor(ctx) {
-        // this.context = ctx;
+    constructor() {
         // this.metadata = new Metadata();
         this.pat_table = [];
         this.pes_streams = [];
@@ -1445,7 +1444,7 @@ class PSI {
         }
         let pmt = new PMTSection(data);
         for (var i = 0; i < pmt.pes_table.length; i++) {
-            this._add_pes_stream(pmt.pes_table[i], pmt);
+            this._add_pes_stream(pmt.pes_table[i]);
         }
         return pmt;
     }
@@ -1453,7 +1452,7 @@ class PSI {
      * @param stream
      * @param pmt
      */
-    _add_pes_stream(stream, pmt) {
+    _add_pes_stream(stream /*, pmt?: PMTSection*/) {
         let streams = this.pes_streams;
         function get_program(id) {
             for (let i = 0, item; i < streams.length; i++) {
