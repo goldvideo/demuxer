@@ -63,8 +63,7 @@ export interface Track {
 // }
 
 export class PSI {
-    constructor(ctx) {
-        // this.context = ctx;
+    constructor() {
         // this.metadata = new Metadata();
         this.pat_table = [];
         this.pes_streams = [];
@@ -244,7 +243,7 @@ export class PSI {
         let pmt = new PMTSection(data);
 
         for (var i = 0; i < pmt.pes_table.length; i++) {
-            this._add_pes_stream(pmt.pes_table[i], pmt);
+            this._add_pes_stream(pmt.pes_table[i]);
         }
 
         return pmt;
@@ -254,7 +253,7 @@ export class PSI {
      * @param stream
      * @param pmt
      */
-    private _add_pes_stream(stream: M2TS.PESTableItem, pmt: PMTSection): void {
+    private _add_pes_stream(stream: M2TS.PESTableItem /*, pmt?: PMTSection*/): void {
         let streams = this.pes_streams;
 
         function get_program(id: number) {
