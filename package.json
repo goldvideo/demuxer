@@ -1,6 +1,6 @@
 {
   "name": "demuxer",
-  "version": "2.2.4",
+  "version": "2.3.0",
   "description": "A utility for transmux ts/mp4/flv",
   "main": "dist/demuxer.all.cjs.js",
   "module": "dist/demuxer.all.esm.js",
