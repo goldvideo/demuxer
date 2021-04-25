@@ -1,6 +1,6 @@
 {
   "name": "demuxer",
-  "version": "2.2.2",
+  "version": "2.2.4",
   "description": "A utility for transmux ts/mp4/flv",
   "main": "dist/demuxer.all.cjs.js",
   "module": "dist/demuxer.all.esm.js",
@@ -14,7 +14,7 @@
   "scripts": {
     "dev": "rollup -c ./rollup.config.js -w -m --environment BUILD_MODE:dev",
     "production": "rollup -c ./rollup.config.js --environment BUILD_MODE:production",
-    "publish": "npm run lint & npm run production & npm publish",
+    "release": "npm run lint & npm run production & npm publish",
     "lint": "eslint --ext js,ts src",
     "test": "karma start",
     "doc": "jsdoc ./src/ -c doc/jsdoc.json"
