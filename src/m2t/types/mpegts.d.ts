@@ -17,7 +17,6 @@ declare namespace M2TS {
     interface PSI_PES_Stream {
         id: number;
         stream_type: number;
-        pcr_pid: number;
         duration: number;
         sps: Array<Uint8Array>;
         pps: Array<Uint8Array>;
@@ -29,10 +28,10 @@ declare namespace M2TS {
 
     interface SDTServiceItem {
         service_id: number;
-        EIT_schedule_flag: number;
-        EIT_present_following_flag: number;
-        running_status: number;
-        free_CA_mode: number;
+        // EIT_schedule_flag: number;
+        // EIT_present_following_flag: number;
+        // running_status: number;
+        // free_CA_mode: number;
         descriptors_loop_length: number;
         provider_name: string;
         name: string;

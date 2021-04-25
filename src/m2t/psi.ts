@@ -7,24 +7,35 @@
 /**
  * PSI(Program Specific Information)
  */
-
-import PATSection from './structs/patSection';
-import PMTSection from './structs/pmtSection';
-import SDTSection from './structs/sdtSection';
+// import { HevcPPSProps, HevcSPSProps, HevcVPSProps } from '../codec/avc';
+import { PATSection } from './structs/patSection';
+import { PMTSection } from './structs/pmtSection';
+// import { SDTSection } from './structs/sdtSection';
 import { PAT_PID, CAT_PID, TSDT_PID, SDT_PID } from '../enum/m2t-pid';
-import { Context } from '../types/globals';
-import Packet from './structs/packet';
-import StreamTypes from '../enum/stream-types';
+// import { Context } from '../types/globals';
+import { Packet } from './structs/packet';
+// import StreamTypes from '../enum/stream-types';
+import { StreamTypes } from '../enum/stream-types';
+import { GOPVector, AACFrameVector } from './types/pipeline';
 
 // const MAX_PIDS_PER_PROGRAM = 64;
 
+type TrackType = 'video' | 'audio' | 'caption';
+
 export interface Track {
     id: number;
+    type: TrackType;
+    stream_type: StreamTypes;
     duration: number;
     width?: number;
     height?: number;
     codec: string;
     realCodec?: string;
+    firstDTS: number;
+    firstPTS: number;
+
+    // Video
+    gops: GOPVector;
     profileIdc?: number;
     profileCompatibility?: number;
     levelIdc?: number;
@@ -33,22 +44,37 @@ export interface Track {
     inputTimeScale?: number;
     sps: Array<Uint8Array>;
     pps: Array<Uint8Array>;
-    stream_type: StreamTypes;
-    pcr_pid: number;
+    vps: Array<Uint8Array>;
+    // hevc_vps: HevcVPSProps;
+    // hevc_sps: HevcSPSProps;
+    // hevc_pps: HevcPPSProps;
 
     // Audio
     isAAC?: boolean;
+    frames: AACFrameVector;
     sampleRate?: number;
     channelCount?: number;
     config?: any;
 }
 
-class Metadata {
-    service_name: string;
-    service_provider: string;
-}
+// class Metadata {
+//     service_name: string;
+//     service_provider: string;
+// }
 
-class PSI {
+export class PSI {
+    constructor(ctx) {
+        // this.context = ctx;
+        // this.metadata = new Metadata();
+        this.pat_table = [];
+        this.pes_streams = [];
+    }
+
+    // private context: AVFormatContext;
+    // private metadata: Metadata; // Specify by SDT Packet
+    private pat_table: Array<M2TS.PATTableItem>; // Specify by PMT Packet
+    private pes_streams: Array<M2TS.PSI_PES_Stream>; // Specify by PES stream
+
     /**
      * program PID
      */
@@ -62,21 +88,13 @@ class PSI {
         return _pmtIds.length > 0 ? _pmtIds[0] : -1;
     }
 
+    get tracks() {
+        return this.pes_streams;
+    }
+
     // get pmtTable() {
     //     return this.pat_table;
     // }
-
-    private context: Context;
-    private metadata: Metadata; // Specify by SDT Packet
-    private pat_table: Array<M2TS.PATTableItem>; // Specify by PMT Packet
-    private pes_streams: Array<M2TS.PSI_PES_Stream>; // Specify by PES stream
-
-    constructor(ctx: Context) {
-        this.context = ctx;
-        this.metadata = new Metadata();
-        this.pat_table = [];
-        this.pes_streams = [];
-    }
 
     /**
      * 目前对于PSI的信息，持久化保留在内存中
@@ -85,7 +103,7 @@ class PSI {
      * 有些 TS 文件在HLS切片器切割的时候，没有带上PAT/PMT等表，需要相邻 TS 给定的表信息
      */
     reset(): void {
-        this.metadata = new Metadata();
+        // this.metadata = new Metadata();
         this.pat_table.splice(0, this.pat_table.length);
         this.pes_streams.splice(0, this.pes_streams.length);
     }
@@ -108,7 +126,7 @@ class PSI {
             /* Reserved */
         } else if (SDT_PID === packet.PID) {
             /* Service Description Table */
-            this._parseSdt(packet);
+            // this._parseSdt(packet);
         } else if (packet.PID === self.currentProgramPID) {
             /* PMT PID */
             this._parsePmt(packet);
@@ -153,7 +171,6 @@ class PSI {
     /**
      * Parse PAT Packet
      * @param pack
-     * @private
      */
     private _parsePat(pack: Packet): PATSection {
         let data: Uint8Array;
@@ -258,7 +275,6 @@ class PSI {
             streams.push({
                 id: stream.PID,
                 stream_type: stream.streamType,
-                pcr_pid: pmt.PCR_PID,
                 duration: 0,
                 sps: [],
                 pps: [],
@@ -274,27 +290,25 @@ class PSI {
      * Parse SDT Packet
      * @param pack
      */
-    private _parseSdt(pack: Packet): SDTSection {
-        let data: Uint8Array;
+    // private _parseSdt(pack: Packet): SDTSection {
+    //     let data: Uint8Array;
 
-        if (pack.payload_unit_start_indicator) {
-            // psi has pointer_field
-            let pointer = pack.payload[0];
+    //     if (pack.payload_unit_start_indicator) {
+    //         // psi has pointer_field
+    //         let pointer = pack.payload[0];
 
-            data = pack.payload.subarray(pointer + 1);
-        } else {
-            data = pack.payload;
-        }
+    //         data = pack.payload.subarray(pointer + 1);
+    //     } else {
+    //         data = pack.payload;
+    //     }
 
-        let sdt = new SDTSection(data);
+    //     let sdt = new SDTSection(data);
 
-        if (sdt.service_table.length > 0) {
-            this.metadata.service_name = sdt.service_table[0].name;
-            this.metadata.service_provider = sdt.service_table[0].provider_name;
-        }
+    //     if (sdt.service_table.length > 0) {
+    //         this.metadata.service_name = sdt.service_table[0].name;
+    //         this.metadata.service_provider = sdt.service_table[0].provider_name;
+    //     }
 
-        return sdt;
-    }
+    //     return sdt;
+    // }
 }
-
-export default PSI;

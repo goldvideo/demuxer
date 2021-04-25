@@ -40,11 +40,9 @@ Value       Description
 0x80-0xFF   User Private
 */
 
-const enum StreamTypes {
+export const enum StreamTypes {
     H264 = 0x1b,
     HEVC = 0x24,
     ADTS = 0x0f,
     METADATA = 0x15
 }
-
-export default StreamTypes;

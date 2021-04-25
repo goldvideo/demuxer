@@ -10,16 +10,16 @@
 import { AACFrame } from '../../codec/aac/aac';
 import getAudioConfig from '../../codec/aac/aac-config';
 import ADTSCodec from '../../codec/adts';
-import StreamType from '../../enum/stream-types';
+import { StreamTypes } from '../../enum/stream-types';
 import Stream from '../../util/stream';
-import PSI from '../psi';
-import { AACFrameList, PESStreamEmitData } from '../types/pipeline';
+import { PSI } from '../psi';
+import { AACFrameVector, PESStreamEmitData } from '../types/pipeline';
 
 class ADTSStream extends Stream {
     private PSI: PSI;
     private trackId?: number;
     private codec: ADTSCodec;
-    private frames: AACFrameList;
+    private frames: AACFrameVector;
 
     constructor(psi: PSI) {
         super();
@@ -40,7 +40,7 @@ class ADTSStream extends Stream {
     }
 
     push(data: PESStreamEmitData) {
-        if (data.stream_type === StreamType.ADTS) {
+        if (data.stream_type === StreamTypes.ADTS) {
             this.trackId = data.pid;
 
             this.codec.push({

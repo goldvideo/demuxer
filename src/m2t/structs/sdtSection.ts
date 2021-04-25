@@ -7,28 +7,28 @@
 /**
  * Structure for sdt.
  */
-import DataViewReader from '../../util/dv';
 import logger from '../../util/logger';
 
-class SDTSection extends DataViewReader {
-    table_id: number;
-    section_syntax_indicator: number;
+/**
+ * Structure for sdt.
+ */
+export class SDTSection {
+    // table_id: number;
+    // section_syntax_indicator: number;
     section_length: number;
-    transport_stream_id: number;
-    version_number: number;
-    current_next_indicator: number;
-    section_number: number;
-    last_section_number: number;
-    original_network_id: number;
+    // transport_stream_id: number;
+    // version_number: number;
+    // current_next_indicator: number;
+    // section_number: number;
+    // last_section_number: number;
+    // original_network_id: number;
     service_table: Array<M2TS.SDTServiceItem>;
 
     constructor(buffer: Uint8Array) {
-        super();
-
         // program_map_section  0x02
-        this.table_id = buffer[0];
+        // this.table_id = buffer[0];
 
-        this.section_syntax_indicator = buffer[1] >> 7;
+        // this.section_syntax_indicator = buffer[1] >> 7;
 
         // this.reserved_0 = (buffer[1] >> 4) & 0x3;
 
@@ -38,25 +38,25 @@ class SDTSection extends DataViewReader {
 
         // This is a 16-bit field which serves as a label for identification of the TS,
         // about which the SDT informs, from any other multiplex within the delivery system
-        this.transport_stream_id = this.readUint16(buffer, 3);
+        // this.transport_stream_id = (buffer[3] << 8) | buffer[4];
 
-        // this.reserved_1 = buffer[5] >> 6;
+        // // this.reserved_1 = buffer[5] >> 6;
 
-        this.version_number = (buffer[5] >> 1) & 0x1f;
+        // this.version_number = (buffer[5] >> 1) & 0x1f;
 
-        this.current_next_indicator = buffer[5] & 0x01;
+        // this.current_next_indicator = buffer[5] & 0x01;
 
         // The section_number of the first section in the sub_table shall be "0x00".
         // The section_number shall be incremented by 1 with each additional section
         // with the same table_id, transport_stream_id, and original_network_id.
-        this.section_number = buffer[6];
+        // this.section_number = buffer[6];
 
         // This 8-bit field specifies the number of the last section
         // (that is, the section with the highest section_number) of the sub_table of which this section is part
-        this.last_section_number = buffer[7];
+        // this.last_section_number = buffer[7];
 
         // This field gives the label identifying the network_id of the originating delivery system.
-        this.original_network_id = this.readUint16(buffer, 8);
+        // this.original_network_id = (buffer[8] << 8) | buffer[9];
 
         // this.reserved_2 = buffer[10];
 
@@ -69,11 +69,11 @@ class SDTSection extends DataViewReader {
         while (i < sv_len) {
             let j = 0;
             let service: M2TS.SDTServiceItem = {
-                service_id: this.readUint16(buffer, 11),
-                EIT_schedule_flag: buffer[13] & 0x02,
-                EIT_present_following_flag: buffer[13] & 0x01,
-                running_status: buffer[14] >> 5,
-                free_CA_mode: (buffer[14] >> 4) & 0x01,
+                service_id: (buffer[11] << 8) | buffer[12],
+                // EIT_schedule_flag: buffer[13] & 0x02,
+                // EIT_present_following_flag: buffer[13] & 0x01,
+                // running_status: buffer[14] >> 5,
+                // free_CA_mode: (buffer[14] >> 4) & 0x01,
                 descriptors_loop_length: ((buffer[14] & 0x0f) << 8) | buffer[15],
                 provider_name: '',
                 name: ''
@@ -126,5 +126,3 @@ class SDTSection extends DataViewReader {
         }
     }
 }
-
-export default SDTSection;

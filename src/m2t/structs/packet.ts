@@ -4,25 +4,20 @@
  * @author gem <gems.xu@gmail.com>
  */
 
-/**
- * packet structure.
- */
-import DataViewReader from '../../util/dv';
-
 const SYNC_BYTE = 0x47; // The sync_byte is a fixed 8-bit field whose value is '0100 0111' (0x47).
 
 /**
- * @extends DataViewReader
+ * packet structure.
  */
-class Packet extends DataViewReader {
+export class Packet {
     sync_byte: number;
-    transport_error_indicator: number;
+    // transport_error_indicator: number;
     payload_unit_start_indicator: number;
-    transport_priority: number;
+    // transport_priority: number;
     PID: number;
-    tsc: number;
+    // tsc: number;
     afc: number;
-    continuity_counter: number;
+    // continuity_counter: number;
     has_payload: number;
     has_adaptation: number;
     // is_discontinuity: boolean;
@@ -32,18 +27,16 @@ class Packet extends DataViewReader {
      * @param buffer
      */
     constructor(buffer: Uint8Array) {
-        super();
-
         this.sync_byte = buffer[0];
 
-        this.transport_error_indicator = buffer[1] >> 7;
+        // this.transport_error_indicator = buffer[1] >> 7;
 
         // Indicating transport stream packets carry PES packets or PSI data
         // PES: 1 -> commence with the first byte of a PES packet,  0 -> no PES packet shall start in this packet.
         // PSI: 1 -> carries the first byte of a PSI section, 0 -> no pointer_field in the payload.
         this.payload_unit_start_indicator = (buffer[1] >> 6) & 1;
 
-        this.transport_priority = (buffer[1] >>> 5) & 1;
+        // this.transport_priority = (buffer[1] >>> 5) & 1;
 
         // The PID(Packet ID) is a 13-bit field, indicating the type of the data stored in the packet payload.
         // NOTE – The transport packets with PID values 0x0000, 0x0001, and 0x0010-0x1FFE are allowed to carry a PCR.
@@ -77,10 +70,10 @@ class Packet extends DataViewReader {
         // 0x0080                 TO 0x00FE User defined
         // 0x00FF                 Reserved
         // 0x1FFF                 Null packet
-        this.PID = this.readUint16(buffer, 1) & 0x1fff;
+        this.PID = ((buffer[1] << 8) | buffer[2]) & 0x1fff;
 
         // transport_scrambling_control
-        this.tsc = buffer[3] >> 6;
+        // this.tsc = buffer[3] >> 6;
 
         // adaptation_field_control
         // Value  Description
@@ -91,8 +84,7 @@ class Packet extends DataViewReader {
         this.afc = (buffer[3] >> 4) & 3;
 
         // '1' indicates that the discontinuity state is true for the current Transport Stream packet.
-        // continuity_counter
-        this.continuity_counter = buffer[3] & 0xf;
+        // this.continuity_counter = buffer[3] & 0xf;
 
         // self defines.
         this.has_payload = this.afc & 1;
@@ -110,10 +102,7 @@ class Packet extends DataViewReader {
         }
     }
 
-    valid(): boolean {
-        let val = this.sync_byte === SYNC_BYTE && this.has_payload === 1;
-        return val;
+    valid() {
+        return this.sync_byte === SYNC_BYTE && this.has_payload === 1;
     }
 }
-
-export default Packet;
