@@ -1,6 +1,6 @@
 {
   "name": "demuxer",
-  "version": "2.1.3",
+  "version": "2.2.2",
   "description": "A utility for transmux ts/mp4/flv",
   "main": "dist/demuxer.all.cjs.js",
   "module": "dist/demuxer.all.esm.js",
@@ -53,7 +53,6 @@
       "path": "git-cz"
     }
   },
-  "dependencies": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/goldvideo/demuxer.git"
