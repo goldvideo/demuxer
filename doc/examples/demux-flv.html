@@ -77,13 +77,17 @@
         </style>
 
         <!-- browser import -->
-        <script type="text/javascript" src="../../dist/demuxer.all.umd.js"></script>
+        <!-- <script type="text/javascript" src="../../dist/demuxer.flv.umd.js"></script>
         <script>
             const FLVDemux = Demuxer.FLVDemux;
             const Events = Demuxer.Events;
-        </script>
+        </script> -->
 
-        <script type="text/javascript">
+        <script type="module">
+            // ES Module import
+            import { FLVDemux, Events } from '../../dist/demuxer.flv.esm.js';
+            // import { MP4Demux, Events } from '../../dist/demuxer.all.esm.js';
+
             function startDemux(bytes) {
                 let demux = new FLVDemux({
                     debug: true // if env is production, debug should be false or not specified.
