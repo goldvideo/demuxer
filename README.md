@@ -4,7 +4,7 @@
 
 [![npm version](https://badge.fury.io/js/demuxer.svg)](https://www.npmjs.com/package/demuxer)
 [![Downloads](https://img.shields.io/npm/dm/demuxer.svg)](https://www.npmjs.com/package/demuxer)
-[![Build Status](https://app.travis-ci.com/goldvideo/demuxer.svg?branch=master)](https://app.travis-ci.com/goldvideo/demuxer.svg?branch=master)
+[![Build Status](https://app.travis-ci.com/goldvideo/demuxer.svg?branch=master)](https://app.travis-ci.com/goldvideo/demuxer)
 
 
 ## Data flow diagram
