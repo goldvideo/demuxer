@@ -48,13 +48,6 @@
     // added to it. This is a useful default which helps finding memory leaks.
     let defaultMaxListeners = 10;
     class EventEmitter {
-        constructor() {
-            if (!this._events || !Object.prototype.hasOwnProperty.call(this, '_events')) {
-                this._events = objectCreate(null);
-                this._eventsCount = 0;
-            }
-            this._maxListeners = this._maxListeners || undefined;
-        }
         static listenerCount(emitter, type) {
             if (typeof emitter.listenerCount === 'function') {
                 return emitter.listenerCount(type);
@@ -62,6 +55,17 @@
             else {
                 return listenerCount.call(emitter, type);
             }
+        }
+        static defaultMaxListeners;
+        _maxListeners;
+        _eventsCount;
+        _events;
+        constructor() {
+            if (!this._events || !Object.prototype.hasOwnProperty.call(this, '_events')) {
+                this._events = objectCreate(null);
+                this._eventsCount = 0;
+            }
+            this._maxListeners = this._maxListeners || undefined;
         }
         // // Obviously not all Emitters should be limited to 10. This function allows
         // // that to be increased. Set to zero for unlimited.
@@ -352,6 +356,9 @@
                 if (m && m > 0 && existing.length > m) {
                     existing.warned = true;
                     class CustomError extends Error {
+                        emitter;
+                        type;
+                        count;
                     }
                     let w = new CustomError('Possible Dispatcher memory leak detected. ' +
                         existing.length +
@@ -568,9 +575,6 @@
      * the algorithm minimizes memory application as much as possible.
      */
     class CacheBuffer {
-        constructor() {
-            this.list_ = [];
-        }
         get byteLength() {
             if (!isNumber(this.byteLength_)) {
                 let len = 0;
@@ -604,6 +608,12 @@
         get bufferList() {
             return this.list_;
         }
+        /**
+         * Used to cache calculations, reduce the number of CPU calculations.
+         * When internal data changes, the value needs to be cleared and recalculated.
+         */
+        byteLength_;
+        list_ = [];
         clear() {
             let len = this.list_.length;
             if (len > 0) {
@@ -719,6 +729,7 @@
      * @fileOverview A simple multimap template.
      */
     class MultiMap {
+        map_;
         constructor() {
             this.map_ = {};
         }
@@ -791,6 +802,9 @@
      * Creates a new Binding_ and attaches the event listener to the event target.
      */
     class Binding_ {
+        target;
+        type;
+        listener;
         /**
          * @param target - The event target.
          * @param type - The event type.
@@ -827,6 +841,7 @@
      * An EventManager maintains a collection of "event bindings" between event targets and event listeners.
      */
     class EventManager {
+        bindingMap_;
         // static Binding_: Binding;
         constructor() {
             /**
@@ -933,16 +948,18 @@
         typeof importScripts != 'undefined';
     const prefix = '>>>';
     class Logger extends EventEmitter {
-        constructor() {
-            super();
-            this._enable = false;
-        }
+        MSG_NAME;
+        _enable;
         get enable() {
             return this._enable;
         }
         set enable(value) {
             this._enable = value;
             this.MSG_NAME = '__log__';
+        }
+        constructor() {
+            super();
+            this._enable = false;
         }
         log(...restArgs) {
             if (isWorker) {
@@ -1054,15 +1071,10 @@
      * @author gem <gems.xu@gmail.com>
      */
     class DemuxFacade extends Stream {
-        constructor(options = {}) {
-            super();
-            if (options.debug) {
-                logger.enable = true;
-            }
-            this.ctx_ = new Context();
-            this.options_ = options;
-            this.cache_buffer_ = new CacheBuffer();
-        }
+        eventManager_;
+        ctx_;
+        options_;
+        cache_buffer_;
         listenEndStream_() {
             this.eventManager_ = new EventManager();
             this.eventManager_
@@ -1075,6 +1087,15 @@
                 .on(this.ctx_, 'error', (data) => {
                 this.emit(exports.Events.ERROR, data);
             });
+        }
+        constructor(options = {}) {
+            super();
+            if (options.debug) {
+                logger.enable = true;
+            }
+            this.ctx_ = new Context();
+            this.options_ = options;
+            this.cache_buffer_ = new CacheBuffer();
         }
         /**
          * transfer data to Uint8Array
@@ -1130,6 +1151,16 @@
      * Structure for pat.
      */
     class PATSection {
+        // table_id: number;
+        // section_syntax_indicator: number;
+        // section_length: number;
+        // transport_stream_id: number;
+        // version_number: number;
+        // current_next_indicator: number;
+        // section_number: number;
+        // last_section_number: number;
+        // network_PID: number;
+        pmtTable;
         // CRC_32: number;
         constructor(buffer) {
             // program_association_section 0x00
@@ -1195,6 +1226,16 @@
      * Structure for PMT.
      */
     class PMTSection {
+        // table_id: number;
+        // section_syntax_indicator: number;
+        // section_length: number;
+        // program_number: number;
+        // version_number: number;
+        // current_next_indicator: number;
+        // section_number: number;
+        // last_section_number: number;
+        // PCR_PID: number;
+        pes_table;
         // CRC_32: number;
         constructor(buffer) {
             // program_map_section  0x02
@@ -1301,12 +1342,16 @@
     //     service_name: string;
     //     service_provider: string;
     // }
-    class PSI {
+    class PSI$1 {
         constructor() {
             // this.metadata = new Metadata();
             this.pat_table = [];
             this.pes_streams = [];
         }
+        // private context: AVFormatContext;
+        // private metadata: Metadata; // Specify by SDT Packet
+        pat_table; // Specify by PMT Packet
+        pes_streams; // Specify by PES stream
         /**
          * program PID
          */
@@ -1910,6 +1955,10 @@
      * @author gem <gems.xu@gmail.com>
      */
     class ADTSStream extends Stream {
+        PSI;
+        trackId;
+        codec;
+        frames;
         constructor(psi) {
             super();
             this.PSI = psi;
@@ -1924,7 +1973,7 @@
             this._newFrames();
         }
         push(data) {
-            if (data.stream_type === 15 /* ADTS */) {
+            if (data.stream_type === 15 /* StreamTypes.ADTS */) {
                 this.trackId = data.pid;
                 this.codec.push({
                     dts: data.pes.DTS,
@@ -2662,6 +2711,17 @@
         return payload[0] >> 5;
     }
     class NALU extends DataViewReader {
+        forbidden_zero_bit;
+        ref_idc;
+        unit_type;
+        data;
+        rawData;
+        sps;
+        pps;
+        sei;
+        primary_pic_type;
+        pts;
+        dts;
         constructor(buffer) {
             super();
             this.forbidden_zero_bit = buffer[0] >> 7;
@@ -2672,26 +2732,26 @@
             this.data = discardEP3B(buffer.subarray(1));
             this.rawData = buffer;
             switch (this.unit_type) {
-                case 1 /* NON_IDR_SLICE */:
+                case 1 /* NaluTypes.NON_IDR_SLICE */:
                     break;
-                case 2 /* DPA_SLICE */:
-                case 3 /* DPB_SLICE */:
-                case 4 /* DPC_SLICE */:
+                case 2 /* NaluTypes.DPA_SLICE */:
+                case 3 /* NaluTypes.DPB_SLICE */:
+                case 4 /* NaluTypes.DPC_SLICE */:
                     // TODO decode A/B/C Partition Slice.
                     break;
-                case 5 /* IDR_SLICE */:
+                case 5 /* NaluTypes.IDR_SLICE */:
                     // this.data = decodeSlice(this.data).data;
                     break;
-                case 7 /* SPS */:
+                case 7 /* NaluTypes.SPS */:
                     this.sps = decodeSPS(this.data);
                     break;
-                case 8 /* PPS */:
+                case 8 /* NaluTypes.PPS */:
                     this.pps = decodePPS(this.data);
                     break;
-                case 6 /* SEI */:
+                case 6 /* NaluTypes.SEI */:
                     this.sei = decodeSEI(this.data);
                     break;
-                case 9 /* AUD */:
+                case 9 /* NaluTypes.AUD */:
                     this.primary_pic_type = _decodeAUD(this.data);
                     break;
             }
@@ -2704,12 +2764,9 @@
      * @author gem <gems.xu@gmail.com>
      */
     class AVCCodec extends EventEmitter {
-        constructor() {
-            super(...arguments);
-            this.lastState = null;
-            this.lastNALu = null;
-            this.lastNALuState = null;
-        }
+        lastState = null;
+        lastNALu = null;
+        lastNALuState = null;
         spitNalu_(bytes, pts, dts) {
             let nalu = new NALU(bytes);
             nalu.pts = pts;
@@ -2869,6 +2926,13 @@
      * @author gem <gems.xu@gmail.com>
      */
     class H264Stream extends Stream {
+        PSI;
+        trackId;
+        currentFrame;
+        prevFrame;
+        codec;
+        gop;
+        gops;
         constructor(psi) {
             super();
             this.PSI = psi;
@@ -2880,7 +2944,7 @@
             this._newGop();
             this._newGops();
             this.codec.on('nalu', (nalu) => {
-                if (nalu.unit_type === 7 /* SPS */) {
+                if (nalu.unit_type === 7 /* NaluTypes.SPS */) {
                     let track = this.PSI.findTrack(this.trackId);
                     let config = getAVCConfig(nalu.sps);
                     // write sps info to video track.
@@ -2893,7 +2957,7 @@
                     track.pixelRatio = nalu.sps.pixelRatio;
                     track.sps = [nalu.rawData];
                 }
-                else if (nalu.unit_type === 8 /* PPS */) {
+                else if (nalu.unit_type === 8 /* NaluTypes.PPS */) {
                     let track = this.PSI.findTrack(this.trackId);
                     track.pps = [nalu.rawData];
                 }
@@ -2906,7 +2970,7 @@
          */
         push(data) {
             const { stream_type, pes, pid } = data;
-            if (stream_type === 27 /* H264 */ || stream_type === 36 /* HEVC */) {
+            if (stream_type === 27 /* StreamTypes.H264 */ || stream_type === 36 /* StreamTypes.HEVC */) {
                 this.trackId = pid;
                 let rawData = {
                     pts: pes.PTS,
@@ -2943,7 +3007,7 @@
          * @private
          */
         _grouping(currentNal) {
-            if (currentNal.unit_type === 9 /* AUD */) {
+            if (currentNal.unit_type === 9 /* NaluTypes.AUD */) {
                 if (this.currentFrame.length > 0) {
                     this.currentFrame.duration = currentNal.dts - this.currentFrame.dts;
                     if (this.gop.length > 0 && this.currentFrame.keyframe) {
@@ -2969,7 +3033,7 @@
                 this.currentFrame.dts = currentNal.dts;
             }
             else {
-                if (currentNal.unit_type === 5 /* IDR_SLICE */) {
+                if (currentNal.unit_type === 5 /* NaluTypes.IDR_SLICE */) {
                     this.currentFrame.keyframe = true;
                 }
                 this.currentFrame.byteLength += currentNal.rawData.byteLength;
@@ -3024,6 +3088,13 @@
      * @author gem <gems.xu@gmail.com>
      */
     class ElementaryStream extends Stream {
+        context;
+        PSI;
+        options;
+        tracks;
+        adtsStream;
+        avcStream;
+        streams;
         constructor(ctx, psi, options = {}) {
             super();
             this.context = ctx;
@@ -3072,11 +3143,11 @@
             let { stream_type } = data;
             if (options.decodeCodec) {
                 switch (stream_type) {
-                    case 27 /* H264 */:
-                    case 36 /* HEVC */:
+                    case 27 /* StreamTypes.H264 */:
+                    case 36 /* StreamTypes.HEVC */:
                         avcStream.push(data);
                         break;
-                    case 15 /* ADTS */:
+                    case 15 /* StreamTypes.ADTS */:
                         adtsStream.push(data);
                         break;
                     default:
@@ -3118,6 +3189,20 @@
      * Structure for Pes.
      */
     class Pes {
+        // private start_code_prefix: number;
+        // stream_id: number;
+        // packet_length: number;
+        // data_alignment_indicator: number;
+        // copyright: number;
+        // ESCR_flag: number;
+        // ES_rate_flag: number;
+        // trick_mode_flag: number;
+        // additional_copy_info_flag: number;
+        // CRC_flag: number;
+        // extension_flag: number;
+        PTS;
+        DTS;
+        data_byte;
         constructor(buffer) {
             // The packet_start_code_prefix is a 24-bit code.
             // this.start_code_prefix = (buffer[0] << 16) | (buffer[1] << 8) | buffer[2];
@@ -3190,6 +3275,10 @@
      * @author gem <gems.xu@gmail.com>
      */
     class PesStream extends Stream {
+        context;
+        PSI;
+        PID;
+        cache_buffer;
         constructor(ctx, psi) {
             super();
             this.context = ctx;
@@ -3280,6 +3369,18 @@
      * packet structure.
      */
     class Packet {
+        sync_byte;
+        // transport_error_indicator: number;
+        payload_unit_start_indicator;
+        // transport_priority: number;
+        PID;
+        // tsc: number;
+        afc;
+        // continuity_counter: number;
+        has_payload;
+        has_adaptation;
+        // is_discontinuity: boolean;
+        payload;
         /**
          * @param buffer
          */
@@ -3362,9 +3463,13 @@
      */
     const CHUNK_BYTE_LENGTH = 188; // Transport Stream chunks shall be 188 bytes long.
     class TSDemux extends DemuxFacade {
+        psi_;
+        pesStream_;
+        elementaryStream_;
+        complexStream_;
         constructor(options = {}) {
             super(options);
-            this.psi_ = new PSI(this.ctx_);
+            this.psi_ = new PSI$1();
             this.pesStream_ = new PesStream(this.ctx_, this.psi_);
             this.elementaryStream_ = new ElementaryStream(this.ctx_, this.psi_, options);
             this.complexStream_ = new M2TSComplexStream(this.ctx_, this.psi_);
@@ -3390,7 +3495,7 @@
          * @param conf
          * @param conf.done - If you need the done event, this boolean needs to be set
          */
-        push(buffer, conf) {
+        push(buffer, conf = {}) {
             const { done } = conf;
             const { options_, ctx_, cache_buffer_, psi_ } = this;
             let newBuf = super.constraintPushData_(buffer);
@@ -4134,6 +4239,14 @@
      * @extends DataViewReader
      */
     class FlvTag extends DataViewReader {
+        tagType;
+        dataSize;
+        timestamp;
+        timestampExtended;
+        streamId;
+        payload;
+        previousTagSize;
+        totalSize;
         /**
          * @param buffer
          */
@@ -4162,6 +4275,10 @@
      * @author gem <gems.xu@gmail.com>
      */
     class BodyStream extends Stream {
+        ctx_;
+        flv_;
+        options_;
+        cache_buffer_;
         constructor(ctx, flvCtx, options = {}) {
             super();
             this.ctx_ = ctx;
@@ -4385,10 +4502,15 @@
         AudioSoundType[AudioSoundType["STEREO"] = 1] = "STEREO"; // For AAC: always 1
     })(AudioSoundType || (AudioSoundType = {}));
     class AVContext extends Stream {
-        constructor() {
-            super(...arguments);
-            this.pos = 0; // parse byte position relative to flv first byte;
-        }
+        stage;
+        pos = 0; // parse byte position relative to flv first byte;
+        version;
+        hasAudio;
+        hasVideo;
+        keyframeTimes;
+        keyframeFilePositions;
+        decoderConfigurationRecord;
+        audioSpecificConfig;
     }
 
     /**
@@ -4437,6 +4559,11 @@
      * @extends DataViewReader
      */
     class AACAudioData extends DataViewReader {
+        dts;
+        pts;
+        aacPacketType;
+        payload;
+        audioSpecificConfig;
         /**
          * @param buffer
          */
@@ -4473,6 +4600,11 @@
      * @extends DataViewReader
      */
     class FlvTagAudioData extends DataViewReader {
+        soundFormat;
+        soundRate;
+        sampleSize; // Size of each sample
+        soundType;
+        soundData;
         /**
          * @param buffer
          */
@@ -4577,6 +4709,14 @@
      * @extends DataViewReader
      */
     class AVCVideoPacket extends DataViewReader {
+        avcPacketType;
+        decoderConfigurationRecord;
+        cts;
+        pts;
+        dts;
+        payload;
+        naluList;
+        avcCodec;
         /**
          * @param buffer
          */
@@ -4643,6 +4783,10 @@
      * @extends DataViewReader
      */
     class FlvTagVideoData extends DataViewReader {
+        frameType;
+        isKeyframe;
+        codecId;
+        videoData;
         /**
          * @param buffer
          */
@@ -4667,6 +4811,9 @@
      * @author gem <gems.xu@gmail.com>
      */
     class TagsStream extends Stream {
+        flv_;
+        options_;
+        pipeCtx;
         constructor(ctx, flv, options = {}) {
             super();
             this.flv_ = flv;
@@ -4745,6 +4892,11 @@
      * @extends DataViewReader
      */
     class FlvHead extends DataViewReader {
+        signature;
+        version;
+        hasAudio;
+        hasVideo;
+        offset;
         /**
          * @param buffer
          */
@@ -4771,6 +4923,10 @@
      * flv
      */
     class FLVDemux extends DemuxFacade {
+        // private complex_: FlvComplex;
+        flv_;
+        tags_;
+        body_;
         constructor(options = {}) {
             super(options);
             this.flv_ = new AVContext();

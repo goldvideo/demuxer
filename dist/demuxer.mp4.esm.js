@@ -43,13 +43,6 @@ var bind = Function.prototype.bind || functionBindPolyfill;
 // added to it. This is a useful default which helps finding memory leaks.
 let defaultMaxListeners = 10;
 class EventEmitter {
-    constructor() {
-        if (!this._events || !Object.prototype.hasOwnProperty.call(this, '_events')) {
-            this._events = objectCreate(null);
-            this._eventsCount = 0;
-        }
-        this._maxListeners = this._maxListeners || undefined;
-    }
     static listenerCount(emitter, type) {
         if (typeof emitter.listenerCount === 'function') {
             return emitter.listenerCount(type);
@@ -57,6 +50,17 @@ class EventEmitter {
         else {
             return listenerCount.call(emitter, type);
         }
+    }
+    static defaultMaxListeners;
+    _maxListeners;
+    _eventsCount;
+    _events;
+    constructor() {
+        if (!this._events || !Object.prototype.hasOwnProperty.call(this, '_events')) {
+            this._events = objectCreate(null);
+            this._eventsCount = 0;
+        }
+        this._maxListeners = this._maxListeners || undefined;
     }
     // // Obviously not all Emitters should be limited to 10. This function allows
     // // that to be increased. Set to zero for unlimited.
@@ -347,6 +351,9 @@ function _addListener(target, type, listener) {
             if (m && m > 0 && existing.length > m) {
                 existing.warned = true;
                 class CustomError extends Error {
+                    emitter;
+                    type;
+                    count;
                 }
                 let w = new CustomError('Possible Dispatcher memory leak detected. ' +
                     existing.length +
@@ -563,9 +570,6 @@ function isUint8Array(value) {
  * the algorithm minimizes memory application as much as possible.
  */
 class CacheBuffer {
-    constructor() {
-        this.list_ = [];
-    }
     get byteLength() {
         if (!isNumber(this.byteLength_)) {
             let len = 0;
@@ -599,6 +603,12 @@ class CacheBuffer {
     get bufferList() {
         return this.list_;
     }
+    /**
+     * Used to cache calculations, reduce the number of CPU calculations.
+     * When internal data changes, the value needs to be cleared and recalculated.
+     */
+    byteLength_;
+    list_ = [];
     clear() {
         let len = this.list_.length;
         if (len > 0) {
@@ -714,6 +724,7 @@ class CacheBuffer {
  * @fileOverview A simple multimap template.
  */
 class MultiMap {
+    map_;
     constructor() {
         this.map_ = {};
     }
@@ -786,6 +797,9 @@ class MultiMap {
  * Creates a new Binding_ and attaches the event listener to the event target.
  */
 class Binding_ {
+    target;
+    type;
+    listener;
     /**
      * @param target - The event target.
      * @param type - The event type.
@@ -822,6 +836,7 @@ class Binding_ {
  * An EventManager maintains a collection of "event bindings" between event targets and event listeners.
  */
 class EventManager {
+    bindingMap_;
     // static Binding_: Binding;
     constructor() {
         /**
@@ -928,16 +943,18 @@ const isWorker = typeof WorkerGlobalScope !== 'undefined' &&
     typeof importScripts != 'undefined';
 const prefix = '>>>';
 class Logger extends EventEmitter {
-    constructor() {
-        super();
-        this._enable = false;
-    }
+    MSG_NAME;
+    _enable;
     get enable() {
         return this._enable;
     }
     set enable(value) {
         this._enable = value;
         this.MSG_NAME = '__log__';
+    }
+    constructor() {
+        super();
+        this._enable = false;
     }
     log(...restArgs) {
         if (isWorker) {
@@ -1049,15 +1066,10 @@ class Stream extends EventEmitter {
  * @author gem <gems.xu@gmail.com>
  */
 class DemuxFacade extends Stream {
-    constructor(options = {}) {
-        super();
-        if (options.debug) {
-            logger.enable = true;
-        }
-        this.ctx_ = new Context();
-        this.options_ = options;
-        this.cache_buffer_ = new CacheBuffer();
-    }
+    eventManager_;
+    ctx_;
+    options_;
+    cache_buffer_;
     listenEndStream_() {
         this.eventManager_ = new EventManager();
         this.eventManager_
@@ -1070,6 +1082,15 @@ class DemuxFacade extends Stream {
             .on(this.ctx_, 'error', (data) => {
             this.emit(Events.ERROR, data);
         });
+    }
+    constructor(options = {}) {
+        super();
+        if (options.debug) {
+            logger.enable = true;
+        }
+        this.ctx_ = new Context();
+        this.options_ = options;
+        this.cache_buffer_ = new CacheBuffer();
     }
     /**
      * transfer data to Uint8Array
