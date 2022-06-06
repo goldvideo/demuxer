@@ -30,7 +30,7 @@ export class TSDemux extends DemuxFacade {
     constructor(options: GlobalOptions = {}) {
         super(options);
 
-        this.psi_ = new PSI(this.ctx_);
+        this.psi_ = new PSI();
         this.pesStream_ = new PesStream(this.ctx_, this.psi_);
         this.elementaryStream_ = new ElementaryStream(this.ctx_, this.psi_, options);
         this.complexStream_ = new M2TSComplexStream(this.ctx_, this.psi_);
@@ -62,7 +62,7 @@ export class TSDemux extends DemuxFacade {
      * @param conf
      * @param conf.done - If you need the done event, this boolean needs to be set
      */
-    push(buffer: ArrayBuffer | Uint8Array, conf: PushConf) {
+    push(buffer: ArrayBuffer | Uint8Array, conf: PushConf = {}) {
         const { done } = conf;
         const { options_, ctx_, cache_buffer_, psi_ } = this;
         let newBuf: Uint8Array = super.constraintPushData_(buffer);
