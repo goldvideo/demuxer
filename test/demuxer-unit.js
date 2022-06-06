@@ -5,27 +5,26 @@
  */
 /* eslint-env jasmine */
 
-import Demuxer from '../src/demuxer';
+import { TSDemux, MP4Demux, FLVDemux } from '../src/index';
 
 describe('Demuxer Entry', () => {
-	/** @type {Demuxer} */
-	let dei;
+    let demux_ts, demux_flv, demux_mp4;
 
-	beforeEach(() => {
-		dei = new Demuxer('m2ts');
-	});
+    beforeEach(() => {
+        demux_ts = new TSDemux();
+        demux_mp4 = new MP4Demux();
+        demux_flv = new FLVDemux();
+    });
 
-	// afterEach(async () => {});
+    // afterEach(async () => {});
 
-	// afterAll(() => {});
+    // afterAll(() => {});
 
-	describe('push', () => {
-		it('should return null if push is not arraybuffer or uint8array', async () => {
-			expect(dei.push('test')).toBeNull();
-			expect(dei.push(undefined)).toBeNull();
-			expect(dei.push(null)).toBeNull();
-			expect(dei.push([])).toBeNull();
-			// expect(dei.push(new Uint8Array([0]))).toBeNull();
-		});
-	});
+    describe('push', () => {
+        it('should instanceOf its class', async () => {
+            expect(demux_ts).toBeInstanceOf(TSDemux);
+            expect(demux_mp4).toBeInstanceOf(MP4Demux);
+            expect(demux_flv).toBeInstanceOf(FLVDemux);
+        });
+    });
 });

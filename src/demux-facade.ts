@@ -12,7 +12,7 @@ import logger from './util/logger';
 import Stream from './util/stream';
 
 export default abstract class DemuxFacade extends Stream implements IDemux {
-    readonly endStream?: Stream;
+    abstract readonly endStream?: Stream;
     protected eventManager_: EventManager;
     protected ctx_: Context;
     protected options_: GlobalOptions;
