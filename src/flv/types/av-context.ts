@@ -10,7 +10,10 @@ import Stream from '../../util/stream';
 import { FLVParseStage } from '../flv-const';
 
 export enum AudioSoundFormat {
-    AAC = 10
+    G711A = 7,
+    G711U = 8,
+    AAC = 10,
+    OPUS = 13,
 }
 
 export enum AudioSoundType {

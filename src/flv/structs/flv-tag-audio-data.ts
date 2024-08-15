@@ -11,6 +11,7 @@ import DataViewReader from '../../util/dv';
 import logger from '../../util/logger';
 import { AudioSoundFormat, AudioSoundType } from '../types/av-context';
 import AACAudioData from './flv-tag-aac-audio-data';
+import OpusAudioData from './flv-tag-opus-data';
 
 // 0 = Linear PCM, platform endian
 // 1 = ADPCM
@@ -29,39 +30,46 @@ import AACAudioData from './flv-tag-aac-audio-data';
  * @extends DataViewReader
  */
 export default class FlvTagAudioData extends DataViewReader {
-    soundFormat: AudioSoundFormat;
-    soundRate: number;
-    sampleSize: number; // Size of each sample
-    soundType: AudioSoundType;
-    soundData: AACAudioData;
+  soundFormat: AudioSoundFormat;
+  soundRate: number;
+  sampleSize: number; // Size of each sample
+  soundType: AudioSoundType;
+  soundData: AACAudioData | OpusAudioData | null;
 
-    /**
-     * @param buffer
-     */
-    constructor(buffer: Uint8Array, timestamp: number) {
-        super();
+  /**
+   * @param buffer
+   */
+  constructor(buffer: Uint8Array, timestamp: number) {
+    super();
 
-        this.soundFormat = (buffer[0] & 0xf0) >> 4;
-        this.soundRate = (buffer[0] & 0x0c) >> 2;
+    this.soundFormat = (buffer[0] & 0xf0) >> 4;
+    this.soundRate = (buffer[0] & 0x0c) >> 2;
 
-        let soundSize = (buffer[0] & 0x02) >> 1;
+    let soundSize = (buffer[0] & 0x02) >> 1;
 
-        switch (soundSize) {
-            case 0:
-                this.sampleSize = 8; // bit
-                break;
-            case 1:
-                this.sampleSize = 16; // bit
-                break;
-        }
-        this.soundType = buffer[0] & 1;
-
-        switch (this.soundFormat) {
-            case AudioSoundFormat.AAC:
-                this.soundData = new AACAudioData(buffer.subarray(1), timestamp);
-                break;
-            default:
-                logger.error(`flv tag audioData encounter unknown soundFormat ${this.soundFormat}`);
-        }
+    switch (soundSize) {
+      case 0:
+        this.sampleSize = 8; // bit
+        break;
+      case 1:
+        this.sampleSize = 16; // bit
+        break;
     }
+    this.soundType = buffer[0] & 1;
+
+    switch (this.soundFormat) {
+      case AudioSoundFormat.G711A:
+      case AudioSoundFormat.G711U:
+        this.soundData = null; // TO be developed
+        break;
+      case AudioSoundFormat.AAC:
+        this.soundData = new AACAudioData(buffer.subarray(1), timestamp);
+        break;
+      case AudioSoundFormat.OPUS:
+        this.soundData = new OpusAudioData(buffer.subarray(1), timestamp);
+        break;
+      default:
+        logger.error(`flv tag audioData encounter unknown soundFormat ${this.soundFormat}`);
+    }
+  }
 }

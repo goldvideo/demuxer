@@ -87,7 +87,7 @@ class H264Stream extends Stream {
         // Push last frame into gop.
         if (this.currentFrame.length > 0) {
             // If the last frame has valid duration, use the duration of the previous frame
-            if (!this.currentFrame.duration || this.currentFrame.duration <= 0) {
+            if (this.prevFrame && (!this.currentFrame.duration || this.currentFrame.duration <= 0)) {
                 this.currentFrame.duration = this.prevFrame.duration || 0;
             }
 
@@ -141,8 +141,8 @@ class H264Stream extends Stream {
             this.currentFrame.keyframe = false;
             this.currentFrame.byteLength = 0;
             this.currentFrame.naluCount = 0;
-            this.currentFrame.pts = currentNal.pts;
-            this.currentFrame.dts = currentNal.dts;
+            this.currentFrame.pts = currentNal.pts / 90000;
+            this.currentFrame.dts = currentNal.dts / 90000;
         } else {
             if (currentNal.unit_type === NaluTypes.IDR_SLICE) {
                 this.currentFrame.keyframe = true;

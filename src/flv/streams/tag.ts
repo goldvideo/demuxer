@@ -13,6 +13,7 @@ import logger from '../../util/logger';
 import Stream from '../../util/stream';
 import { AMFdeSerialize } from '../structs/flv-amf';
 import FlvTag from '../structs/flv-tag';
+import AACAudioData from '../structs/flv-tag-aac-audio-data';
 import FlvTagAudioData from '../structs/flv-tag-audio-data';
 import FlvTagVideoData from '../structs/flv-tag-video-data';
 import AVContext from '../types/av-context';
@@ -93,8 +94,8 @@ class TagsStream extends Stream {
         const data = new FlvTagAudioData(tag.payload, tag.timestamp);
         const { /*sampleSize,*/ soundData } = data;
 
-        if (soundData.audioSpecificConfig) {
-            flv_.audioSpecificConfig = soundData.audioSpecificConfig;
+        if ((soundData as AACAudioData)?.audioSpecificConfig) {
+            flv_.audioSpecificConfig = (soundData as AACAudioData).audioSpecificConfig;
         } else {
             // let stubTime = options_.config.stubTime;
             // if (isNumber(stubTime)) {

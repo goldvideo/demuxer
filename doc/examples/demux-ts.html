@@ -1,24 +1,23 @@
 <!DOCTYPE html>
 <html>
-
-<head>
+  <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Demuxer</title>
 
     <style type="text/css">
-        body {
-            font: 12px/1.5 Tahoma, Helvetica, Arial, "\5FAE\8F6F\96C5\9ED1", sans-serif;
-        }
+      body {
+        font: 12px/1.5 Tahoma, Helvetica, Arial, '\5FAE\8F6F\96C5\9ED1', sans-serif;
+      }
 
-        div {
-            outline: none;
-        }
+      div {
+        outline: none;
+      }
 
-        video {
-            width: 100%;
-            height: 100%;
-        }
+      video {
+        width: 100%;
+        height: 100%;
+      }
     </style>
 
     <!-- browser import -->
@@ -26,44 +25,42 @@
     <script>
         const TSDemux = Demuxer.TSDemux;
         const Events = Demuxer.Events;
-    </script> 
+    </script>
     -->
 
     <script type="module">
-        // ES Module import
-        import { TSDemux, Events } from '../../dist/demuxer.ts.esm.js';
-        // import { TSDemux, Events } from '../../dist/demuxer.all.esm.js';
-        let tsUrl = './h265_aac_1_16000.ts';
+      // ES Module import
+      // import { TSDemux, Events } from '../../dist/demuxer.ts.esm.js';
+      import { TSDemux, Events } from '../../dist/demuxer.all.esm.js';
+      let tsUrl = './1718677128314-48.ts';
 
-        fetch(tsUrl).then((res) => {
-            res.arrayBuffer().then((bytes) => {
-                let demux = new TSDemux({
-                    debug: true // if env is production, debug should be false or not specified.
-                });
+      fetch(tsUrl).then((res) => {
+        res.arrayBuffer().then((bytes) => {
+          let demux = new TSDemux({
+            debug: true, // if env is production, debug should be false or not specified.
+            decodeCodec: true
+          });
 
-                demux.on(Events.DEMUX_DATA, (e) => {
-                    console.log(e)
+          demux.on(Events.DEMUX_DATA, (e) => {
+            console.log(e);
 
-                    // if (e.stream_type === 15) {
-                    //     console.log(e)
-                    // }
-                });
+            // if (e.stream_type === 15) {
+            //     console.log(e)
+            // }
+          });
 
-                demux.on(Events.DONE, (e) => {
-                    // consumed & flushed all pipe buffer.
-                });
+          demux.on(Events.DONE, (e) => {
+            // consumed & flushed all pipe buffer.
+          });
 
-                // buffer -> video bytes ArrayBuffer 
-                demux.push(bytes, {
-                    done: true
-                });
-            });
-        })
+          // buffer -> video bytes ArrayBuffer
+          demux.push(bytes, {
+            done: true
+          });
+        });
+      });
     </script>
-</head>
+  </head>
 
-<body style="background-color: darkslategray;">
-
-</body>
-
+  <body style="background-color: darkslategray;"></body>
 </html>

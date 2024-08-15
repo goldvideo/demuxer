@@ -1,204 +1,180 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-        <title>Demuxer</title>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Demuxer</title>
 
-        <style type="text/css">
-            body {
-                font: 12px/1.5 Tahoma, Helvetica, Arial, '\5FAE\8F6F\96C5\9ED1', sans-serif;
-            }
+    <style type="text/css">
+      body {
+        font: 12px/1.5 Tahoma, Helvetica, Arial, '\5FAE\8F6F\96C5\9ED1', sans-serif;
+      }
 
-            div {
-                outline: none;
-            }
+      div {
+        outline: none;
+      }
 
-            video {
-                width: 100%;
-                height: 100%;
-            }
-        </style>
+      video {
+        width: 100%;
+        height: 100%;
+      }
+    </style>
 
-        <style type="text/css">
-            form {
-                width: 580px;
-                background: #ccc;
-                margin: 0 auto;
-                padding: 20px;
-                border: 1px solid black;
-            }
+    <style type="text/css">
+      form {
+        width: 580px;
+        background: #ccc;
+        margin: 0 auto;
+        padding: 20px;
+        border: 1px solid black;
+      }
 
-            form ol {
-                padding-left: 0;
-            }
+      form ol {
+        padding-left: 0;
+      }
 
-            form li,
-            div > p {
-                background: #eee;
-                display: flex;
-                justify-content: space-between;
-                margin-bottom: 10px;
-                list-style-type: none;
-                border: 1px solid black;
-            }
+      form li,
+      div > p {
+        background: #eee;
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        list-style-type: none;
+        border: 1px solid black;
+      }
 
-            form img {
-                height: 64px;
-                order: 1;
-            }
+      form img {
+        height: 64px;
+        order: 1;
+      }
 
-            form p {
-                line-height: 32px;
-                padding-left: 10px;
-            }
+      form p {
+        line-height: 32px;
+        padding-left: 10px;
+      }
 
-            form label,
-            form button {
-                background-color: #7f9ccb;
-                padding: 5px 10px;
-                border-radius: 5px;
-                border: 1px ridge black;
-                font-size: 0.8rem;
-                height: auto;
-            }
+      form label,
+      form button {
+        background-color: #7f9ccb;
+        padding: 5px 10px;
+        border-radius: 5px;
+        border: 1px ridge black;
+        font-size: 0.8rem;
+        height: auto;
+      }
 
-            form label:hover,
-            form button:hover {
-                background-color: #2d5ba3;
-                color: white;
-            }
+      form label:hover,
+      form button:hover {
+        background-color: #2d5ba3;
+        color: white;
+      }
 
-            form label:active,
-            form button:active {
-                background-color: #0d3f8f;
-                color: white;
-            }
-        </style>
+      form label:active,
+      form button:active {
+        background-color: #0d3f8f;
+        color: white;
+      }
+    </style>
 
-        <!-- browser import -->
-        <!-- <script type="text/javascript" src="../../dist/demuxer.flv.umd.js"></script>
+    <!-- browser import -->
+    <!-- <script type="text/javascript" src="../../dist/demuxer.flv.umd.js"></script>
         <script>
             const FLVDemux = Demuxer.FLVDemux;
             const Events = Demuxer.Events;
         </script> -->
 
-        <script type="module">
-            // ES Module import
-            import { FLVDemux, Events } from '../../dist/demuxer.flv.esm.js';
-            // import { MP4Demux, Events } from '../../dist/demuxer.all.esm.js';
+    <script type="module">
+      // ES Module import
+      import { FLVDemux, Events } from '../../dist/demuxer.flv.esm.js';
 
-            function startDemux(bytes) {
-                let demux = new FLVDemux({
-                    debug: true // if env is production, debug should be false or not specified.
-                    // decodeCodec: true // if you want to decode H264 or aac
-                });
+      window.startDemux = function (bytes) {
+        let demux = new FLVDemux({
+          debug: true // if env is production, debug should be false or not specified.
+          // decodeCodec: true // if you want to decode H264 or aac
+        });
 
-                demux
-                    .on(Events.DEMUX_DATA, (e) => {
-                        // console.log(e);
+        const printObject = [];
 
-                        switch (e.type) {
-                            case 'head':
-                                break;
-                            case 'tag':
-                                // // get audio info
+        demux
+          .on(Events.DEMUX_DATA, (e) => {
+            console.log(e);
 
-                                // get onMetaData info
+            printObject.push(e);
 
-                                // case FlvDemux.VideoTag.TYPE:
-                                //     // get video info
-                                //     break;
+            switch (e.type) {
+              case 'head':
+                break;
+              case 'tag':
+                // // get audio info
 
-                                if (e.tagType == 9) {
-                                    console.log(`avcPacketType: `, e.videoData ? e.videoData.avcPacketType : null);
-                                }
-                                break;
-                        }
-                    })
-                    .on(Events.DONE, (e) => {
-                        // consumed & flushed all pipe buffer.
-                    })
-                    .on(Events.ERROR, (e) => {
-                        // encounter some unexpected error.
-                    });
+                // get onMetaData info
 
-                // buffer -> video bytes ArrayBuffer
-                // If bytes is not continuous, it should be start with tag.
-                demux.push(bytes);
+                // case FlvDemux.VideoTag.TYPE:
+                //     // get video info
+                //     break;
+
+                if (e.tagType == 9) {
+                  console.log(`avcPacketType: `, e.videoData ? e.videoData.avcPacketType : null);
+                }
+                break;
             }
-        </script>
+          })
+          .on(Events.DONE, (e) => {
+            // consumed & flushed all pipe buffer.
+          })
+          .on(Events.ERROR, (e) => {
+            // encounter some unexpected error.
+          });
 
-        <!-- <script type="module">
-            // ES Module import
-            import { FLVDemux, Events } from '../../dist/demuxer.flv.esm.js';
-            // import { FLVDemux, Events } from '../../dist/demuxer.all.esm.js';
+        // buffer -> video bytes ArrayBuffer
+        // If bytes is not continuous, it should be start with tag.
+        demux.push(bytes);
 
-            let tsUrl = './h264_aac_1_11025.flv';
+        document.querySelector('#JSONViewer').data = printObject;
+      };
+    </script>
+    <script src="https://unpkg.com/@alenaksu/json-viewer@2.0.0/dist/json-viewer.bundle.js"></script>
+  </head>
 
-            fetch(tsUrl).then((res) => {
-                res.arrayBuffer().then((bytes) => {
-                    // startDemux(bytes);
-                });
-            });
-        </script> -->
-    </head>
-
-    <body style="background-color: darkslategray;">
-        <form method="post" enctype="multipart/form-data">
-            <div>
-                <label for="flv_uploads">Choose a file to upload (FLV, F4V)</label>
-                <input type="file" id="flv_uploads" name="flv_uploads" accept=".flv, .f4v" />
-            </div>
-            <div class="preview">
-                <p>No files currently selected for upload</p>
-            </div>
-            <!-- <div>
+  <body style="background-color: darkslategray;">
+    <form method="post" enctype="multipart/form-data">
+      <div>
+        <label for="flv_uploads">Choose a file to upload (FLV, F4V)</label>
+        <input type="file" id="flv_uploads" name="flv_uploads" accept=".flv, .f4v" />
+      </div>
+      <div class="preview">
+        <p>No files currently selected for upload</p>
+      </div>
+      <!-- <div>
                 <button>Submit</button>
             </div> -->
-        </form>
+    </form>
 
-        <script>
-            var input = document.querySelector('input#flv_uploads');
-            var preview = document.querySelector('.preview');
-            input.addEventListener('change', fileChanged);
+    <json-viewer id="JSONViewer"></json-viewer>
 
-            function fileChanged() {
-                while (preview.firstChild) {
-                    preview.removeChild(preview.firstChild);
-                }
+    <script>
+      var input = document.querySelector('input#flv_uploads');
+      var preview = document.querySelector('.preview');
+      input.addEventListener('change', fileChanged);
 
-                const curFiles = input.files;
-                if (curFiles.length === 0) {
-                    const para = document.createElement('p');
-                    para.textContent = 'No files currently selected for upload';
-                    preview.appendChild(para);
-                } else {
-                    var curFile = curFiles[0]; // only handle one input file
+      function fileChanged() {
+        while (preview.firstChild) {
+          preview.removeChild(preview.firstChild);
+        }
 
-                    curFile.arrayBuffer().then((bytes) => {
-                        startDemux(bytes);
-                    });
+        const curFiles = input.files;
+        if (curFiles.length === 0) {
+          const para = document.createElement('p');
+          para.textContent = 'No files currently selected for upload';
+          preview.appendChild(para);
+        } else {
+          var curFile = curFiles[0]; // only handle one input file
 
-                    // for (const file of curFiles) {
-                    //     const listItem = document.createElement('li');
-                    //     const para = document.createElement('p');
-                    //     if (validFileType(file)) {
-                    //         para.textContent = `File name ${file.name}, file size ${returnFileSize(file.size)}.`;
-                    //         const image = document.createElement('img');
-                    //         image.src = URL.createObjectURL(file);
-
-                    //         listItem.appendChild(image);
-                    //         listItem.appendChild(para);
-                    //     } else {
-                    //         para.textContent = `File name ${file.name}: Not a valid file type. Update your selection.`;
-                    //         listItem.appendChild(para);
-                    //     }
-
-                    //     list.appendChild(listItem);
-                    // }
-                }
-            }
-        </script>
-    </body>
+          curFile.arrayBuffer().then((bytes) => {
+            startDemux(bytes);
+          });
+        }
+      }
+    </script>
+  </body>
 </html>
