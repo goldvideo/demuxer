@@ -1478,7 +1478,10 @@ function uint8ToDouble_(data) {
  */
 var AudioSoundFormat;
 (function (AudioSoundFormat) {
+    AudioSoundFormat[AudioSoundFormat["G711A"] = 7] = "G711A";
+    AudioSoundFormat[AudioSoundFormat["G711U"] = 8] = "G711U";
     AudioSoundFormat[AudioSoundFormat["AAC"] = 10] = "AAC";
+    AudioSoundFormat[AudioSoundFormat["OPUS"] = 13] = "OPUS";
 })(AudioSoundFormat || (AudioSoundFormat = {}));
 var AudioSoundType;
 (function (AudioSoundType) {
@@ -1585,6 +1588,39 @@ class AACAudioData extends DataViewReader {
 }
 
 /**
+ * @file: created at Monday, 25th May 2020 12:36:52 am
+ * @copyright Copyright (c) 2020
+ * @author gem <gems.xu@gmail.com>
+ */
+var OpusPacketType;
+(function (OpusPacketType) {
+    OpusPacketType[OpusPacketType["SEQUENCE_HEAD"] = 0] = "SEQUENCE_HEAD";
+    OpusPacketType[OpusPacketType["RAW"] = 1] = "RAW"; // 1 : One or more NALUs (Full frames are required)
+})(OpusPacketType || (OpusPacketType = {}));
+/**
+ * @extends DataViewReader
+ */
+class OpusAudioData extends DataViewReader {
+    dts;
+    pts;
+    packetType;
+    payload;
+    /**
+     * @param buffer
+     */
+    constructor(buffer, timestamp) {
+        super();
+        this.dts = timestamp;
+        this.pts = timestamp;
+        this.packetType = buffer[0];
+        this.payload = buffer.subarray(1);
+        // if (this.aacPacketType === 0) {
+        //     this.audioSpecificConfig = parseAudioSpecificConfig(this.payload);
+        // }
+    }
+}
+
+/**
  * @file: created at Monday, 25th May 2020 2:51:52 am
  * @copyright Copyright (c) 2020
  * @author gem <gems.xu@gmail.com>
@@ -1628,8 +1664,15 @@ class FlvTagAudioData extends DataViewReader {
         }
         this.soundType = buffer[0] & 1;
         switch (this.soundFormat) {
+            case AudioSoundFormat.G711A:
+            case AudioSoundFormat.G711U:
+                this.soundData = null; // TO be developed
+                break;
             case AudioSoundFormat.AAC:
                 this.soundData = new AACAudioData(buffer.subarray(1), timestamp);
+                break;
+            case AudioSoundFormat.OPUS:
+                this.soundData = new OpusAudioData(buffer.subarray(1), timestamp);
                 break;
             default:
                 logger.error(`flv tag audioData encounter unknown soundFormat ${this.soundFormat}`);
@@ -2685,7 +2728,7 @@ class TagsStream extends Stream {
         const { /*options_,*/ flv_ } = this;
         const data = new FlvTagAudioData(tag.payload, tag.timestamp);
         const { /*sampleSize,*/ soundData } = data;
-        if (soundData.audioSpecificConfig) {
+        if (soundData?.audioSpecificConfig) {
             flv_.audioSpecificConfig = soundData.audioSpecificConfig;
         }
         let ret = {

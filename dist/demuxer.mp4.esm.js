@@ -1203,7 +1203,7 @@ parse = {
         };
     },
     esds: function (data) {
-        let view = new DataView(data.buffer, data.byteOffset, data.byteLength);
+        new DataView(data.buffer, data.byteOffset, data.byteLength);
         return {
             version: data[0],
             flags: new Uint8Array(data.subarray(1, 4)),

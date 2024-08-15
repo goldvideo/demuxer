@@ -1,46 +1,39 @@
 {
-    "files.autoSave": "afterDelay",
-    "editor.formatOnPaste": true,
-    "editor.formatOnSave": true,
-    "cSpell.words": [
-        "demuxer"
-    ],
-    "psi-header.lang-config": [
-        {
-            "language": "javascript",
-            "begin": "/**",
-            "prefix": " * ",
-            "end": " */",
-            "blankLinesAfter": 1,
-            "forceToTop": true
-        },
-        {
-            "language": "typescript",
-            "mapTo": "javascript"
-        }
-    ],
-    "psi-header.variables": [
-        [
-            "author",
-            "gem",
-        ],
-        [
-            "authoremail",
-            "gems.xu@gmail.com"
-        ]
-    ],
-    "psi-header.templates": [
-        {
-            "language": "javascript",
-            "template": [
-                "@file: created at <<filecreated('dddd, Do MMMM YYYY h:mm:ss a')>>",
-                "@copyright Copyright (c) 2020",
-                "@author <<author>> <<<authoremail>>>",
-            ]
-        },
-        {
-            "language": "typescript",
-            "mapTo": "javascript"
-        }
-    ]
+  "files.autoSave": "afterDelay",
+  "editor.formatOnPaste": true,
+  "editor.formatOnSave": true,
+  "cSpell.words": ["demuxer"],
+  "psi-header.lang-config": [
+    {
+      "language": "javascript",
+      "begin": "/**",
+      "prefix": " * ",
+      "end": " */",
+      "blankLinesAfter": 1,
+      "forceToTop": true
+    },
+    {
+      "language": "typescript",
+      "mapTo": "javascript"
+    }
+  ],
+  "psi-header.variables": [
+    ["author", "gem"],
+    ["authoremail", "gems.xu@gmail.com"]
+  ],
+  "psi-header.templates": [
+    {
+      "language": "javascript",
+      "template": [
+        "@file: created at <<filecreated('dddd, Do MMMM YYYY h:mm:ss a')>>",
+        "@copyright Copyright (c) 2020",
+        "@author <<author>> <<<authoremail>>>"
+      ]
+    },
+    {
+      "language": "typescript",
+      "mapTo": "javascript"
+    }
+  ],
+  "liveServer.settings.port": 5501
 }

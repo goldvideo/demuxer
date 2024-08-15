@@ -7,6 +7,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
  * @copyright Copyright (c) 2020
  * @author gem <gems.xu@gmail.com>
  */
+exports.Events = void 0;
 (function (Events) {
     Events["ERROR"] = "ERROR";
     Events["INFO"] = "INFO";
@@ -1206,7 +1207,7 @@ parse = {
         };
     },
     esds: function (data) {
-        let view = new DataView(data.buffer, data.byteOffset, data.byteLength);
+        new DataView(data.buffer, data.byteOffset, data.byteLength);
         return {
             version: data[0],
             flags: new Uint8Array(data.subarray(1, 4)),

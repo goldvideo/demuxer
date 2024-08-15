@@ -7,6 +7,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
  * @copyright Copyright (c) 2020
  * @author gem <gems.xu@gmail.com>
  */
+exports.Events = void 0;
 (function (Events) {
     Events["ERROR"] = "ERROR";
     Events["INFO"] = "INFO";
@@ -1340,7 +1341,7 @@ const SDT_PID = 0x0011;
 //     service_name: string;
 //     service_provider: string;
 // }
-class PSI$1 {
+class PSI {
     constructor() {
         // this.metadata = new Metadata();
         this.pat_table = [];
@@ -2982,7 +2983,7 @@ class H264Stream extends Stream {
         // Push last frame into gop.
         if (this.currentFrame.length > 0) {
             // If the last frame has valid duration, use the duration of the previous frame
-            if (!this.currentFrame.duration || this.currentFrame.duration <= 0) {
+            if (this.prevFrame && (!this.currentFrame.duration || this.currentFrame.duration <= 0)) {
                 this.currentFrame.duration = this.prevFrame.duration || 0;
             }
             this._pushFrameIntoGop();
@@ -3027,8 +3028,8 @@ class H264Stream extends Stream {
             this.currentFrame.keyframe = false;
             this.currentFrame.byteLength = 0;
             this.currentFrame.naluCount = 0;
-            this.currentFrame.pts = currentNal.pts;
-            this.currentFrame.dts = currentNal.dts;
+            this.currentFrame.pts = currentNal.pts / 90000;
+            this.currentFrame.dts = currentNal.dts / 90000;
         }
         else {
             if (currentNal.unit_type === 5 /* NaluTypes.IDR_SLICE */) {
@@ -3467,7 +3468,7 @@ class TSDemux extends DemuxFacade {
     complexStream_;
     constructor(options = {}) {
         super(options);
-        this.psi_ = new PSI$1();
+        this.psi_ = new PSI();
         this.pesStream_ = new PesStream(this.ctx_, this.psi_);
         this.elementaryStream_ = new ElementaryStream(this.ctx_, this.psi_, options);
         this.complexStream_ = new M2TSComplexStream(this.ctx_, this.psi_);
