@@ -1,15 +1,13 @@
 import path from 'path';
+import typescriptPlugin from '@rollup/plugin-typescript';
 import livereloadPlugin from 'rollup-plugin-livereload';
-import typescriptPlugin from 'rollup-plugin-typescript2';
-import typescript from 'typescript';
 
 const { BUILD_MODE } = process.env;
 
 const getPlugins = function () {
 	const plugins = [
 		typescriptPlugin({
-			tsconfig: path.resolve(__dirname, 'tsconfig.json'),
-			typescript
+			tsconfig: path.resolve(__dirname, 'tsconfig.json')
 		})
 	];
 

@@ -1,66 +1,37 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Demuxer</title>
-
-    <style type="text/css">
-      body {
-        font: 12px/1.5 Tahoma, Helvetica, Arial, '\5FAE\8F6F\96C5\9ED1', sans-serif;
-      }
-
-      div {
-        outline: none;
-      }
-
-      video {
-        width: 100%;
-        height: 100%;
-      }
-    </style>
-
-    <!-- browser import -->
-    <!-- <script type="text/javascript" src="../../dist/demuxer.ts.umd.js"></script>
-    <script>
-        const TSDemux = Demuxer.TSDemux;
-        const Events = Demuxer.Events;
-    </script>
-    -->
-
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Demux MPEG-TS — demuxer</title>
+    <link rel="stylesheet" href="./demo-common.css" />
     <script type="module">
-      // ES Module import
-      // import { TSDemux, Events } from '../../dist/demuxer.ts.esm.js';
-      import { TSDemux, Events } from '../../dist/demuxer.all.esm.js';
-      let tsUrl = './1718677128314-48.ts';
+      import { TSDemux, Events } from "../../dist/demuxer.ts.esm.js";
+      import { initDemuxDemo } from "./demo-common.js";
 
-      fetch(tsUrl).then((res) => {
-        res.arrayBuffer().then((bytes) => {
-          let demux = new TSDemux({
-            debug: true, // if env is production, debug should be false or not specified.
-            decodeCodec: true
-          });
-
-          demux.on(Events.DEMUX_DATA, (e) => {
-            console.log(e);
-
-            // if (e.stream_type === 15) {
-            //     console.log(e)
-            // }
-          });
-
-          demux.on(Events.DONE, (e) => {
-            // consumed & flushed all pipe buffer.
-          });
-
-          // buffer -> video bytes ArrayBuffer
-          demux.push(bytes, {
-            done: true
-          });
-        });
+      initDemuxDemo({
+        Events,
+        formatLabel: "MPEG-TS",
+        title: "Demux MPEG-TS",
+        subtitle:
+          "Parse Transport Stream (.ts) locally. Codec elementary streams can be decoded when decodeCodec is enabled.",
+        accept: ".ts,video/mp2t",
+        sampleUrl: "./1718677128314-48.ts",
+        sampleButtonLabel: "Load sample .ts",
+        createDemux: () =>
+          new TSDemux({
+            debug: true,
+            decodeCodec: true,
+          }),
+        pushOptions: { done: true },
+        hints: [
+          "Uses dist/demuxer.ts.esm.js · push(..., { done: true }) signals end of buffer.",
+          "decodeCodec: true enables elementary stream parsing used in this demo.",
+        ],
       });
     </script>
   </head>
-
-  <body style="background-color: darkslategray;"></body>
+  <body>
+    <div id="demux-demo-root"></div>
+  </body>
 </html>

@@ -1,59 +1,35 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Demuxer</title>
-
-    <style type="text/css">
-      body {
-        font: 12px/1.5 Tahoma, Helvetica, Arial, '\5FAE\8F6F\96C5\9ED1', sans-serif;
-      }
-
-      div {
-        outline: none;
-      }
-
-      video {
-        width: 100%;
-        height: 100%;
-      }
-    </style>
-
-    <!-- browser import -->
-    <!-- <script type="text/javascript" src="../../dist/demuxer.all.umd.js"></script>
-        <script>
-            const MP4Demux = Demuxer.MP4Demux;
-            const Events = Demuxer.Events;
-        </script> -->
-
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Demux MP4 — demuxer</title>
+    <link rel="stylesheet" href="./demo-common.css" />
     <script type="module">
-      // ES Module import
-      import { MP4Demux, Events } from '../../dist/demuxer.mp4.esm.js';
-      // import { MP4Demux, Events } from '../../dist/demuxer.all.esm.js';
+      import { MP4Demux, Events } from "../../dist/demuxer.mp4.esm.js";
+      import { initDemuxDemo } from "./demo-common.js";
 
-      let tsUrl = './hdr420_480_30s.fmp4';
-
-      fetch(tsUrl).then((res) => {
-        res.arrayBuffer().then((bytes) => {
-          let demux = new MP4Demux({
-            debug: true // if env is production, debug should be false or not specified.
-          });
-
-          demux.on(Events.DEMUX_DATA, (e) => {
-            console.log(e);
-          });
-
-          demux.on(Events.DONE, (e) => {
-            // consumed & flushed all pipe buffer.
-          });
-
-          // buffer -> video bytes ArrayBuffer
-          demux.push(bytes);
-        });
+      initDemuxDemo({
+        Events,
+        formatLabel: "MP4 / fMP4",
+        title: "Demux MP4",
+        subtitle:
+          "Parse MP4 / fragmented MP4 in the browser. Choose a local file or load the bundled sample; results appear immediately.",
+        accept: ".mp4,.m4v,.fmp4,video/mp4",
+        sampleUrl: "./hdr420_480_30s.fmp4",
+        sampleButtonLabel: "Load sample fMP4",
+        createDemux: () =>
+          new MP4Demux({
+            debug: true,
+          }),
+        hints: [
+          "Uses tree-shakable build: dist/demuxer.mp4.esm.js",
+          "Debug logs also go to the developer console.",
+        ],
       });
     </script>
   </head>
-
-  <body style="background-color: darkslategray;"></body>
+  <body>
+    <div id="demux-demo-root"></div>
+  </body>
 </html>
